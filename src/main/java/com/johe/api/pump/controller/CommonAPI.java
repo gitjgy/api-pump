@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.johe.api.pump.dto.DepartmentDto;
+import com.johe.api.pump.dto.UserDto;
 import com.johe.api.pump.entity.CategoryEntity;
 import com.johe.api.pump.entity.CategoryEntity3;
 import com.johe.api.pump.entity.StationEntity;
@@ -24,11 +26,13 @@ import com.johe.api.pump.entity.SupplierEntity;
 import com.johe.api.pump.entity.result.ResultEntity;
 import com.johe.api.pump.entity.result.ResultStatus;
 import com.johe.api.pump.repository.CategoryRepository;
+import com.johe.api.pump.repository.DepartmentRepository;
 import com.johe.api.pump.repository.StationRepository;
 import com.johe.api.pump.repository.StockBinRepository;
 import com.johe.api.pump.repository.StorageRepository;
 import com.johe.api.pump.repository.SupplierRepository;
 import com.johe.api.pump.repository.SysCodeRepository;
+import com.johe.api.pump.repository.SysUserRepository;
 import com.johe.api.pump.util.AppConstants;
 
 import io.swagger.annotations.Api;
@@ -61,6 +65,12 @@ public class CommonAPI {
 	
 	@Autowired
 	StationRepository sReps;
+	
+	@Autowired
+	DepartmentRepository deptReps;
+	
+	@Autowired
+	SysUserRepository sysuReps;
 	
 	// 物料大类列表
     @GetMapping("/category")
@@ -254,4 +264,50 @@ public class CommonAPI {
 					
 				}));
     }
+    
+    
+    // 部门列表
+    @GetMapping("/department")
+    @ApiOperation(value = "获取部门列表",notes="获取部门列表")
+    public ResultEntity<List<DepartmentDto>> getDepartments(){
+    	List<Object> objList = deptReps.getAllDepartments();
+    	List<DepartmentDto> deptList = new ArrayList<DepartmentDto>();
+    	for(int i=0;i<objList.size();i++) {
+    		Object[] obj = (Object[]) objList.get(i);
+    		DepartmentDto dept = new DepartmentDto();
+    		dept.setDept_id(Long.valueOf(obj[0].toString()));
+    		dept.setDept_code(obj[1]==null?"":String.valueOf(obj[1]));
+    		dept.setDept_name(obj[2]==null?"":String.valueOf(obj[2]));
+    		deptList.add(dept);
+    	}
+    	
+    	return new ResultEntity<List<DepartmentDto>>(ResultStatus.OK.getCode(),
+    			ResultStatus.OK.getMessage(),
+    			deptList);
+    }
+    
+    // 获取库管或采购人员
+    @GetMapping("/stadmin_buyer")
+    @ApiOperation(value = "获取仓库管理员或采购人员",notes="获取仓库管理员或采购人员")
+    @ApiImplicitParam(name = "type", value = "类型01:仓库管理员、02:采购员", allowableValues = "01,02", required = true, dataType = "string", paramType = "query") 
+    public ResultEntity<UserDto> getUserDto(String type){
+    		Object[] obj = null;
+    		if("01".equals(type)) {
+    			obj = (Object[]) sysuReps.getStorageAdmin();
+    		}else if("02".equals(type)) {
+    			obj = (Object[]) sysuReps.getBuyer();
+    		}
+    		UserDto user = null;
+    		if(obj != null) {
+    			user = new UserDto();
+	    		user.setUser_id(obj[0]==null?0:Long.parseLong(String.valueOf(obj[0])));
+	    		user.setUser_name(obj[1]==null?"":String.valueOf(obj[1]));
+	    		user.setRole_name(obj[2]==null?"":String.valueOf(obj[2]));
+    		}
+    	
+    	return new ResultEntity<UserDto>(ResultStatus.OK.getCode(),
+    			ResultStatus.OK.getMessage(),
+    			user);
+    }
+    
 }

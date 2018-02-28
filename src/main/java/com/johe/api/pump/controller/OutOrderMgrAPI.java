@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.johe.api.pump.dto.AuditOutOrderDto;
 import com.johe.api.pump.dto.AuditOutOrderItemDto;
 import com.johe.api.pump.dto.OutOrderDto;
+import com.johe.api.pump.dto.PickRecordDto;
 import com.johe.api.pump.dto.ScanOutOrderDto;
 import com.johe.api.pump.entity.AuditRecordEntity;
 import com.johe.api.pump.entity.OutOrderEntity;
@@ -398,4 +399,25 @@ public class OutOrderMgrAPI {
 
 		return true;
 	}
+	
+	// 借用人列表
+    @GetMapping("/pickrecord")
+    @ApiOperation(value = "获取物料借用记录",notes="获取物料借用记录")
+    @ApiImplicitParam(name = "bar_code", value = "条形码", required = true, dataType = "string", paramType = "query") 
+    public ResultEntity<List<PickRecordDto>> getDepartments(String barCode){
+    	List<Object> objList = outOrderReps.getPickInfo(barCode);
+    	List<PickRecordDto> redList = new ArrayList<PickRecordDto>();
+    	for(int i=0;i<objList.size();i++) {
+    		Object[] obj = (Object[]) objList.get(i);
+    		PickRecordDto pr = new PickRecordDto();
+    		pr.setPick_addr((obj[0]==null?"":String.valueOf(obj[0])));
+    		pr.setPick_person(obj[1]==null?"":String.valueOf(obj[1]));
+    		pr.setPick_time(obj[2]==null?"":String.valueOf(obj[2]));
+    		redList.add(pr);
+    	}
+    	
+    	return new ResultEntity<List<PickRecordDto>>(ResultStatus.OK.getCode(),
+    			ResultStatus.OK.getMessage(),
+    			redList);
+    }
 }

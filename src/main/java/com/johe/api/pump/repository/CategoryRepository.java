@@ -11,7 +11,7 @@ import com.johe.api.pump.entity.CategoryEntity;
 public interface CategoryRepository extends JpaRepository<CategoryEntity, Long>,
 								JpaSpecificationExecutor<CategoryEntity> {
 	
-	List<CategoryEntity> findByParentid(Long parentCategoryId);
+	List<CategoryEntity> findByParentid(long parentCategoryId);
 
 	CategoryEntity findByCodeAndParentid(String code,String parentid);
 	
