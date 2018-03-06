@@ -31,6 +31,7 @@ import com.johe.api.pump.repository.MaterialRepository;
 import com.johe.api.pump.repository.MessageRepository;
 import com.johe.api.pump.service.InOrderService;
 import com.johe.api.pump.service.MessageService;
+import com.johe.api.pump.service.SeqNumberService;
 import com.johe.api.pump.util.AppConstants;
 import com.johe.api.pump.util.AppUtil;
 
@@ -58,8 +59,8 @@ public class InOrderServiceImpl implements InOrderService {
 	@Autowired
 	MessageService msgService;
 
-	@PersistenceContext
-	EntityManager em;
+	@Autowired
+	SeqNumberService seqService;
 
 	@Transactional
 	@Override
@@ -187,7 +188,7 @@ public class InOrderServiceImpl implements InOrderService {
 	private InOrderEntity saveInOrder(InOrderDto dto) {
 		InOrderEntity o = new InOrderEntity();
 		o.setSin_type(dto.getIn_type());// 类型
-		o.setSin_sn(String.valueOf(System.currentTimeMillis()));// 入库单号
+		o.setSin_sn(seqService.queryByBiztype(AppConstants.SN_PREFIX_MAP.get("IN"+dto.getIn_type())));// 入库单号
 		o.setSin_batch_no(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));// 批次号
 		o.setSin_datetime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 		o.setSin_receive_stock(dto.getSin_receive_stock());// 收货仓库
@@ -233,7 +234,7 @@ public class InOrderServiceImpl implements InOrderService {
 		InOrderEntity ioe = new InOrderEntity();
 		ioe.setMt_feature(dto.getFeature());
 		ioe.setSin_acceptor(dto.getAcceptor());
-		ioe.setSin_datetime("B" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+		ioe.setSin_datetime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 		ioe.setSin_dept(dto.getDept());
 		ioe.setSin_keeper(dto.getKeeper());
 		ioe.setSin_leader(dto.getLeader());
@@ -241,7 +242,7 @@ public class InOrderServiceImpl implements InOrderService {
 		ioe.setSin_make_person(dto.getMake_person());
 		ioe.setSin_receive_stock(dto.getStorage_id());
 		ioe.setSin_salesman(dto.getSalesman());
-		ioe.setSin_sn("SN" + String.valueOf(System.currentTimeMillis()));// 编号
+		ioe.setSin_sn(seqService.queryByBiztype(AppConstants.SN_PREFIX_MAP.get("IN"+dto.getIn_type())));// 编号
 		// ioe.setSin_batch_no(sin_batch_no);//批次号
 		ioe.setSin_summary(dto.getSummary());
 		ioe.setSin_supply(dto.getSupply_id());

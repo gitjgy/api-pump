@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.johe.api.pump.entity.SysUserEntity;
 
+
 public interface SysUserRepository extends JpaRepository<SysUserEntity, Long>,
 								JpaSpecificationExecutor<SysUserEntity> {
 	
@@ -19,9 +20,9 @@ public interface SysUserRepository extends JpaRepository<SysUserEntity, Long>,
 	
 	@Query(value="SELECT md.PARENT_ID,md.PDA_MENU_ID,md.PDA_MENU_NAME FROM t_sys_user u " + 
 			"LEFT JOIN t_sys_role_user ru  ON u.USER_ID=ru.USER_ID " + 
-			"LEFT JOIN t_sys_role r ON r.ROLE_ID=ru.ROLE_ID" + 
+			"LEFT JOIN t_sys_role r ON r.ROLE_ID=ru.ROLE_ID " + 
 			"LEFT JOIN t_sys_role_menu_func_pda rmf ON rmf.ROLE_ID=r.ROLE_ID " + 
-			"LEFT JOIN t_sys_menu_pda md ON rmf.PDA_MENU_ID=md.PDA_MENU_ID" + 
+			"LEFT JOIN t_sys_menu_pda md ON rmf.PDA_MENU_ID=md.PDA_MENU_ID " + 
 			"WHERE u.POLICY_NO='N' " + 
 			"AND u.ACCOUNT=?1 " + 
 			"AND u.PWD=?2 " + 
@@ -48,17 +49,18 @@ public interface SysUserRepository extends JpaRepository<SysUserEntity, Long>,
 	@Query(value=" SELECT " + 
 			"  u.USER_ID," + 
 			"  u.USER_NAME," + 
-			"  r.ROLE_NAME" + 
-			"FROM" + 
+			"  r.ROLE_NAME " + 
+			"FROM " + 
 			"  t_sys_user u " + 
 			"  JOIN t_sys_role_user ru " + 
 			"    ON ru.USER_ID = u.USER_ID " + 
 			"  JOIN t_sys_role r " + 
 			"    ON r.ROLE_ID = ru.ROLE_ID " + 
 			" WHERE r.ROLE_NAME LIKE '%采购%'" + 
-			" ORDER BY u.USER_ID" + 
-			" LIMIT 0,1;",nativeQuery=true)
-	Object getBuyer();
+			" ORDER BY u.USER_ID"
+//			" LIMIT 0,1;"
+			,nativeQuery=true)
+	List<Object> getBuyer();
 	
 	
 }

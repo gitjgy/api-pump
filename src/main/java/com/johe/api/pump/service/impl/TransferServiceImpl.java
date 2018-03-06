@@ -27,7 +27,9 @@ import com.johe.api.pump.repository.MessageRepository;
 import com.johe.api.pump.repository.TransferOrderItemRepository;
 import com.johe.api.pump.repository.TransferOrderRepository;
 import com.johe.api.pump.service.MessageService;
+import com.johe.api.pump.service.SeqNumberService;
 import com.johe.api.pump.service.TransferService;
+import com.johe.api.pump.util.AppConstants;
 
 @Service
 public class TransferServiceImpl implements TransferService {
@@ -53,8 +55,8 @@ public class TransferServiceImpl implements TransferService {
 	@Autowired
 	MessageService msgService;
 	
-//	@PersistenceContext
-//	EntityManager em;
+	@Autowired
+	SeqNumberService seqService;
 	
 	
 	@Transactional
@@ -185,7 +187,7 @@ public class TransferServiceImpl implements TransferService {
 		o.setTran_leader(dto.getTran_leader());
 		o.setTran_logistics_co(dto.getTran_logistics_co());
 		o.setTran_logistics_order_sn(dto.getTran_logistics_order_sn());
-		o.setTran_order_sn("SN"+new SimpleDateFormat("yyyyMMddHHmmss").format(now));
+		o.setTran_order_sn(seqService.queryByBiztype(AppConstants.SN_PREFIX_MAP.get("DB")));
 		
 //		o.setTran_order_sn(tran_order_sn);//调拨单编号 
 		o.setTran_other_order_sn(dto.getTran_other_order_sn());
@@ -231,7 +233,7 @@ public class TransferServiceImpl implements TransferService {
 		toe.setTran_logistics_co(dto.getLogistics_co());
 		toe.setTran_logistics_order_sn(dto.getLogistics_order_sn());
 		toe.setTran_make_person(dto.getMake_person());
-		toe.setTran_order_sn("SN"+new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+		toe.setTran_order_sn(seqService.queryByBiztype(AppConstants.SN_PREFIX_MAP.get("DB")));
 		toe.setTran_other_order_sn(dto.getOther_order_sn());
 		toe.setTran_out_address(dto.getOut_address());
 		toe.setTran_out_stock(dto.getOut_stock());

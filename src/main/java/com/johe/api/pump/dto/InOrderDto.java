@@ -27,6 +27,6 @@ public class InOrderDto {
 	@ApiModelProperty(value="记账人（限32字符）") private String tally_person;
 	@ApiModelProperty(value="验收人（限32字符）") private String acceptor;
 	@ApiModelProperty(value="保管人（限32字符）") private String keeper;
-	@ApiModelProperty(value="业务员（限32字符）") private String salesman;
+	@ApiModelProperty(value="业务员（采购员）（限32字符）") private String salesman;
 	@ApiModelProperty(value="负责人（限32字符）") private String leader;
 }

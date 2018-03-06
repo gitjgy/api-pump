@@ -286,28 +286,30 @@ public class CommonAPI {
     			deptList);
     }
     
-    // 获取库管或采购人员
+    // 获取采购人员
     @GetMapping("/stadmin_buyer")
-    @ApiOperation(value = "获取仓库管理员或采购人员",notes="获取仓库管理员或采购人员")
-    @ApiImplicitParam(name = "type", value = "类型01:仓库管理员、02:采购员", allowableValues = "01,02", required = true, dataType = "string", paramType = "query") 
-    public ResultEntity<UserDto> getUserDto(String type){
+    @ApiOperation(value = "获取采购人员列表",notes="获取采购人员列表")
+//    @ApiImplicitParam(name = "type", value = "类型01:仓库管理员、02:采购员", allowableValues = "01,02", required = true, dataType = "string", paramType = "query") 
+    public ResultEntity<List<UserDto>> getUserDto(){
     		Object[] obj = null;
-    		if("01".equals(type)) {
-    			obj = (Object[]) sysuReps.getStorageAdmin();
-    		}else if("02".equals(type)) {
-    			obj = (Object[]) sysuReps.getBuyer();
-    		}
-    		UserDto user = null;
-    		if(obj != null) {
-    			user = new UserDto();
+//    		if("01".equals(type)) {
+//    			obj = (Object[]) sysuReps.getStorageAdmin();
+//    		}else if("02".equals(type)) {
+//    		}
+    		List<Object> objList = sysuReps.getBuyer();
+    		List<UserDto> userList = new ArrayList<UserDto>();
+    		for(int i=0;i<objList.size();i++) {
+    			obj = (Object[]) objList.get(i);
+    			UserDto user = new UserDto();
 	    		user.setUser_id(obj[0]==null?0:Long.parseLong(String.valueOf(obj[0])));
 	    		user.setUser_name(obj[1]==null?"":String.valueOf(obj[1]));
 	    		user.setRole_name(obj[2]==null?"":String.valueOf(obj[2]));
+	    		userList.add(user);
     		}
     	
-    	return new ResultEntity<UserDto>(ResultStatus.OK.getCode(),
+    	return new ResultEntity<List<UserDto>>(ResultStatus.OK.getCode(),
     			ResultStatus.OK.getMessage(),
-    			user);
+    			userList);
     }
     
 }

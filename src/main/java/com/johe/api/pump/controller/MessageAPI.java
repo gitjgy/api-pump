@@ -53,6 +53,7 @@ public class MessageAPI {
 				List<Predicate> list = new ArrayList<Predicate>();
 				
 				list.add(cb.equal(root.<String>get("audit_post"), "03"));// 审核职位：03库管
+				list.add(cb.notEqual(root.<Long>get("relate_id"), -1));
 				
 				query.orderBy(cb.desc(root.get("send_time")));				
 				Predicate[] pres = new Predicate[list.size()];

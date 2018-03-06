@@ -31,6 +31,7 @@ import com.johe.api.pump.repository.OutOrderItemRepository;
 import com.johe.api.pump.repository.OutOrderRepository;
 import com.johe.api.pump.service.MessageService;
 import com.johe.api.pump.service.OutOrderService;
+import com.johe.api.pump.service.SeqNumberService;
 import com.johe.api.pump.util.AppConstants;
 
 @Service
@@ -60,6 +61,9 @@ public class OutOrderServiceImpl implements OutOrderService {
 	
 	@Autowired
 	InventoryBookRepository ibReps;
+	
+	@Autowired
+	SeqNumberService seqService;
 	
 	@Transactional
 	@Override
@@ -203,8 +207,8 @@ public class OutOrderServiceImpl implements OutOrderService {
 		o.setOsp_pick_person(dto.getPick_person());
 		
 		Date now = new Date();
-		o.setOsp_sn("SN"+new SimpleDateFormat("yyyyMMddHHmmss").format(now));
-		o.setOsp_batch_no("B"+new SimpleDateFormat("yyyyMMddHHmmss").format(now));
+		o.setOsp_sn(seqService.queryByBiztype(AppConstants.SN_PREFIX_MAP.get("OUT"+dto.getOut_type())));
+		o.setOsp_batch_no(new SimpleDateFormat("yyyyMMddHHmmss").format(now));
 		o.setOsp_date(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(now));
 		
 		return outOrderReps.save(o);
@@ -233,7 +237,7 @@ public class OutOrderServiceImpl implements OutOrderService {
 	public OutOrderEntity createOutOrderByScan(ScanOutOrderDto dto) throws Exception {
 		OutOrderEntity ooe = new OutOrderEntity();
 		ooe.setMt_feature(dto.getFeature());
-		ooe.setOsp_batch_no("B"+String.valueOf(System.currentTimeMillis()));
+		ooe.setOsp_batch_no(String.valueOf(System.currentTimeMillis()));
 		ooe.setOsp_date(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 		ooe.setOsp_delivery_date(dto.getDelivery_date());
 		ooe.setOsp_delivery_person(dto.getDelivery_person());
@@ -241,7 +245,7 @@ public class OutOrderServiceImpl implements OutOrderService {
 		ooe.setOsp_make_person(dto.getMake_person());
 		ooe.setOsp_pick_address(dto.getPick_address());
 		ooe.setOsp_pick_person(dto.getPick_person());
-		ooe.setOsp_sn("SN"+String.valueOf(System.currentTimeMillis()));
+		ooe.setOsp_sn(seqService.queryByBiztype(AppConstants.SN_PREFIX_MAP.get("OUT"+dto.getOut_type())));
 		ooe.setOsp_status("01");
 		ooe.setOsp_type(dto.getOut_type());
 		OutOrderEntity oe = outOrderReps.save(ooe);

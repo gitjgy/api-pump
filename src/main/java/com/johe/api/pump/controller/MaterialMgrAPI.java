@@ -40,7 +40,7 @@ public class MaterialMgrAPI {
     @GetMapping("/{feature}/{big_id}/{small_id}/{storage_id}/{page}/{size}")
     @ApiOperation(value = "根据特性、大类、小类、仓库、页码、条数，获取物料信息",notes="根据特性、大类、小类、仓库、页码、条数，获取物料信息列表")
     @ApiImplicitParams({
-    	@ApiImplicitParam(name="feature",value="物料特性:000:全部、001:市采、002:普通、003:重要、004:关键",required=true, dataType="String",paramType="query"),
+    	@ApiImplicitParam(name="feature",value="物料特性:00:全部、01:市采、02:普通、03:重要、04:关键",required=true, dataType="String",paramType="query"),
     	@ApiImplicitParam(name="big_id",value="大类ID（-1:全部）",required=true, dataType="long",paramType="query"),
     	@ApiImplicitParam(name="small_id",value="小类ID（-1:全部）",required=true, dataType="long",paramType="query"),
     	@ApiImplicitParam(name="storage_id",value="所属仓库ID（-1:全部）",required=true, dataType="long",paramType="query"),
@@ -57,7 +57,7 @@ public class MaterialMgrAPI {
     	final long mtBigId = bigId;
     	final long mtSmallId = smallId;
     	final long mtStorageId = storageId;
-    	if(mtFeature.equals("000") || mtFeature.equals("001") || mtFeature.equals("002") || mtFeature.equals("003") || mtFeature.equals("004")) {
+    	if(mtFeature.equals("00") || mtFeature.equals("01") || mtFeature.equals("02") || mtFeature.equals("03") || mtFeature.equals("04")) {
     	}else {
     		return new ResultEntity<Page<MaterialEntity>>(ResultStatus.ARGUMENT_VALUE_ILLEGAL.getCode(),
         			ResultStatus.ARGUMENT_VALUE_ILLEGAL.getMessage(),
@@ -77,7 +77,7 @@ public class MaterialMgrAPI {
 //				Join<StorageEntity,MaterialEntity> storageJoin = root.join("storage",JoinType.LEFT);
 //				SetJoin<MaterialEntity,StorageEntity> storageJoin = root.join(root.getModel().getSet("storage",StorageEntity.class),JoinType.LEFT);
 				if(!mtFeature.equals(AppConstants.MATERIAL_ATTR_ALL)) {
-					list.add(cb.equal(root.<String>get("mt_attr"), mtFeature));
+					list.add(cb.equal(root.<String>get("mt_feature"), mtFeature));
 				}
 				if(mtBigId != AppConstants.QUERY_ID_ALL) {
 					list.add(cb.equal(root.<Long>get("mt_category_big"), mtBigId));
