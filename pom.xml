@@ -6,8 +6,8 @@
 	<groupId>com.johe.pump.api</groupId>
 	<artifactId>api-pump</artifactId>
 	<version>0.0.1-Release</version>
-	<!-- <packaging>jar</packaging> -->
-	<packaging>war</packaging>
+	 <packaging>jar</packaging> 
+	<!--<packaging>war</packaging>-->
 
 	<name>api-pump</name>
 	<description>Api Pump Station project for Spring Boot</description>
@@ -103,12 +103,12 @@
 
 	<build>
 		<plugins>
-			<!-- <plugin>
+			 <plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin> --> 
+			</plugin> 
 			<!-- 打war包 4 -->
- 			<plugin>
+ 			<!--<plugin>
 	            <groupId>org.springframework.boot</groupId>
 	            <artifactId>spring-boot-maven-plugin</artifactId>
 	            <executions>
@@ -127,7 +127,7 @@
 		          <skipTests>true</skipTests>  
 		        </configuration>  
 		      </plugin>  
-		     
+		     --> 
 		</plugins>
 	</build>
 

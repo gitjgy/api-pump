@@ -13,14 +13,14 @@ import com.johe.api.pump.service.impl.UserDetailsServiceImpl;
 
 @EnableTransactionManagement 
 @SpringBootApplication
-//	public class ApiPumpApplication {// jar运行测试
-public class ApiPumpApplication extends SpringBootServletInitializer {// 打war包1
-	
-	// 打war包2
-	@Override
-	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-		return builder.sources(ApiPumpApplication.class);
-	}
+	public class ApiPumpApplication {// jar运行测试
+//public class ApiPumpApplication extends SpringBootServletInitializer {// 打war包1
+//	
+//	// 打war包2
+//	@Override
+//	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+//		return builder.sources(ApiPumpApplication.class);
+//	}
 	
 	public static void main(String[] args) {
 		SpringApplication.run(ApiPumpApplication.class, args);

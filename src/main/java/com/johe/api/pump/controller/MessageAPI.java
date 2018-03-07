@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.johe.api.pump.entity.InOrderItemEntity;
 import com.johe.api.pump.entity.MessageEntity;
 import com.johe.api.pump.entity.result.ResultEntity;
 import com.johe.api.pump.entity.result.ResultStatus;

@@ -9,6 +9,6 @@ public interface SeqNumberRepository extends JpaRepository<SeqNumberEntity, Long
 								JpaSpecificationExecutor<SeqNumberEntity> {
 	
 
-	SeqNumberEntity findByBtypeAndYmdhms(String bType,String ymdhms);
+	SeqNumberEntity findByBtype(String bType);
 	
 }
