@@ -17,4 +17,7 @@ public class AuditTransferItemDto {
 	 @ApiModelProperty(value="调入仓位代码",required=true) private String tranitem_in_bin_code;
 	 @ApiModelProperty(value="调出仓库ID",required=true) private long tranitem_out_stock;
 	 @ApiModelProperty(value="调出仓位代码",required=true) private String tranitem_out_bin_code;
+	 @ApiModelProperty(value="物料特性：01普通、02市采、03重要、04关键",required=true) private String mt_feature;
+	 @ApiModelProperty(value="单价",required=true) private double tranitem_price=0;
+	 
 }

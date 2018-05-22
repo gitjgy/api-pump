@@ -127,7 +127,7 @@ public class MaterialMgrAPI {
     @ApiOperation(value = "条形码模糊搜索物料",notes="条形码模糊搜索物料")
     @ApiImplicitParam(name="bar_code",value="物料条形码",required=true, dataType="string",paramType="query")
     public ResultEntity<List<MaterialEntity>> getMaterailByBarCode(@PathVariable("bar_code")String barCode){
-//    	System.out.println("[模糊搜索]"+barCode);
+    	System.out.println("[模糊搜索]"+barCode);
     	return new ResultEntity<List<MaterialEntity>>(ResultStatus.OK.getCode(),
     			ResultStatus.OK.getMessage(),
     	materialReposity.searchByBarcodeLike(barCode));

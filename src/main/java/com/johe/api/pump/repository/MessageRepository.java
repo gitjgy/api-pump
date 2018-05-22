@@ -15,7 +15,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long>,
 	
 	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value="UPDATE pump_message p SET p.audit_post='00',p.finish_time=?1,p.send_time=?1,p.audit_records=p.audit_records+?2 "
+	@Query(value="UPDATE pump_message p SET p.audit_post='00',p.finish_time=?1,p.send_time=?1,p.audit_records=CONCAT(p.audit_records,?2) "
 			+ "WHERE p.relate_id=?3 AND p.biz_type=?4",nativeQuery=true)
 	public void updateAuditMsg(String finishTime, String auditRecords, long orderId, String biz_type);
 }

@@ -1,5 +1,6 @@
 package com.johe.api.pump.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -29,6 +30,7 @@ public class MaterialListEntity {
 //	@Setter @Getter @ApiModelProperty(value="仓库ID") private long stg_id;
 	@Setter @Getter @ApiModelProperty(value="大类ID") private long mt_category_big;
 	@Setter @Getter @ApiModelProperty(value="小类ID") private long mt_category_small;
+	@Setter @Getter @Column(name="mt_assist_attr") @ApiModelProperty(value="单价") private String price;
 //	@Setter @Getter @ApiModelProperty(value="仓位位ID") private long sbin_pos_id;
 	
 }

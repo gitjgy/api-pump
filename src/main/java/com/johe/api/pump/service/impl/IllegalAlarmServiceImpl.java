@@ -12,9 +12,13 @@ import com.johe.api.pump.dto.IllegalMaterialDto;
 import com.johe.api.pump.dto.IllegalOutDto;
 import com.johe.api.pump.dto.ResponseIllegalOutDto;
 import com.johe.api.pump.entity.IllegalAlarmEntity;
+import com.johe.api.pump.entity.MaterialEntity;
+import com.johe.api.pump.entity.SysUserEntity;
 import com.johe.api.pump.entity.result.ResultStatus;
 import com.johe.api.pump.repository.IllegalAlarmRepository;
+import com.johe.api.pump.repository.MaterialRepository;
 import com.johe.api.pump.repository.OutOrderItemRepository;
+import com.johe.api.pump.repository.SysUserRepository;
 import com.johe.api.pump.service.IllegalAlarmService;
 
 @Service
@@ -34,6 +38,12 @@ public class IllegalAlarmServiceImpl implements IllegalAlarmService {
 	
 	@Autowired
 	IllegalAlarmRepository illegalReps;
+	
+	@Autowired
+	MaterialRepository mtReps;
+	
+	@Autowired
+	SysUserRepository userReps;
 	
 	@Transactional
 	@Override
@@ -133,15 +143,15 @@ public class IllegalAlarmServiceImpl implements IllegalAlarmService {
 	// 校验非法出库物料，添加非法预警
 	@Override
 	public ResponseIllegalOutDto checkIsIllegal(IllegalOutDto ioDto) {
+		boolean isOk = true;
 		ResponseIllegalOutDto res = new ResponseIllegalOutDto();
-		
 		List<IllegalMaterialDto> material = ioDto.getMaterial();
 		if(material != null) {
 			for(int i=0;i<material.size();i++) {
 				IllegalMaterialDto dto = material.get(i);
 				// 某条形码的操作时间在审核时间的3个小时外，认为是非法出库；
 				// 操作时间 > 库管审核时间 + 3小时，非法出库
-				long count = outReps.getCountByBarCodeAndAuditTime(dto.getBarcode(), ioDto.getOperatetime());
+				/*long count = outReps.getCountByBarCodeAndAuditTime(dto.getBarcode(), ioDto.getOpttime());
 				if(count > 0) {// 有出库单，但是出库时间在库管审核时间3小时之后了，被认定为非法出库
 					IllegalAlarmEntity alarm = new IllegalAlarmEntity();
 					alarm.setBarcode(dto.getBarcode());
@@ -149,34 +159,95 @@ public class IllegalAlarmServiceImpl implements IllegalAlarmService {
 					alarm.setClose_time(ioDto.getClosetime());
 					alarm.setCre_time(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 					alarm.setEqp_sn(ioDto.getEquipment());
-					alarm.setOpt_person(ioDto.getPerson());
-					alarm.setOpt_time(ioDto.getOperatetime());
+					alarm.setOpt_person(ioDto.getOptperson());
+					alarm.setOpt_time(ioDto.getOpttime());
 					alarm.setReq_id(ioDto.getRequestid());
 					alarm.setReq_time(ioDto.getRequesttime());
 					illegalReps.save(alarm);
+					isOk = false;
 				} else {
 					long cnt = outReps.getCountByBarCode(dto.getBarcode());
-					if(cnt == 0) {// 此条形码压根不存在出库单中，也被认定非法出库
+					if(cnt == 0) {// 此条形码压根不存在出库单中，有可能 是非法出库
+						System.out.println(">>>>>>>>>>>>可疑非法出库条码:"+dto.getBarcode());
+						//而且，此条码是在库状态，才认定为非法出库
+						MaterialEntity mt = mtReps.findByBarcode(dto.getBarcode());
+						if(mt != null && mt.getMt_in_remain_quantity() > 0) {//库存大于0，也就是说，库存量还有
+							IllegalAlarmEntity alm = new IllegalAlarmEntity();
+							alm.setBarcode(dto.getBarcode());
+							alm.setOpen_time(ioDto.getOpentime());
+							alm.setClose_time(ioDto.getClosetime());
+							alm.setCre_time(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+							alm.setEqp_sn(ioDto.getEquipment());
+							alm.setOpt_person(ioDto.getOptperson());
+							alm.setOpt_time(ioDto.getOpttime());
+							alm.setReq_id(ioDto.getRequestid());
+							alm.setReq_time(ioDto.getRequesttime());
+							illegalReps.save(alm);
+							System.out.println(">>>>>>>>>>>>确定非法出库条码:"+dto.getBarcode());
+							isOk = false;
+						}
+					}
+				}*/		
+				
+				
+				//先判断是否有库存量，再判断是否有出库申请记录
+				long cnt = outReps.getCountByBarCode(dto.getBarcode());
+				if(cnt == 0) {// 此条形码压根不存在出库单中，有可能 是非法出库
+					//System.out.println(">>>>>>>>>>>>可疑非法出库条码:"+dto.getBarcode());
+					//而且，此条码是在库状态，才认定为非法出库
+					MaterialEntity mt = mtReps.findByBarcode(dto.getBarcode());
+					if(mt != null && mt.getMt_in_remain_quantity() > 0) {//库存大于0，也就是说，库存量还有
 						IllegalAlarmEntity alm = new IllegalAlarmEntity();
 						alm.setBarcode(dto.getBarcode());
 						alm.setOpen_time(ioDto.getOpentime());
 						alm.setClose_time(ioDto.getClosetime());
 						alm.setCre_time(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 						alm.setEqp_sn(ioDto.getEquipment());
-						alm.setOpt_person(ioDto.getPerson());
-						alm.setOpt_time(ioDto.getOperatetime());
+						SysUserEntity user = userReps.findByUserCode(ioDto.getOptperson());
+						alm.setOpt_person(user==null?ioDto.getOptperson():user.getUser_name());
+						alm.setOpt_time(ioDto.getOpttime());
 						alm.setReq_id(ioDto.getRequestid());
 						alm.setReq_time(ioDto.getRequesttime());
 						illegalReps.save(alm);
+						//System.out.println(">>>>>>>>>>>>确定非法出库条码:"+dto.getBarcode());
+						isOk = false;
 					}
-				}				
+				} else {
+					// 某条形码的操作时间在审核时间的3个小时外，认为是非法出库；
+					// 操作时间 > 库管审核时间 + 3小时，非法出库
+					long count = outReps.getCountByBarCodeAndAuditTime(dto.getBarcode(), ioDto.getOpttime());
+					if(count > 0) {// 有出库单，但是出库时间在库管审核时间3小时之后了，被认定为非法出库
+						MaterialEntity mt = mtReps.findByBarcode(dto.getBarcode());
+						if(mt != null && mt.getMt_in_remain_quantity() > 0) {
+							IllegalAlarmEntity alarm = new IllegalAlarmEntity();
+							alarm.setBarcode(dto.getBarcode());
+							alarm.setOpen_time(ioDto.getOpentime());
+							alarm.setClose_time(ioDto.getClosetime());
+							alarm.setCre_time(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+							alarm.setEqp_sn(ioDto.getEquipment());
+							SysUserEntity user = userReps.findByUserCode(ioDto.getOptperson());
+							alarm.setOpt_person(user==null?ioDto.getOptperson():user.getUser_name());
+							alarm.setOpt_time(ioDto.getOpttime());
+							alarm.setReq_id(ioDto.getRequestid());
+							alarm.setReq_time(ioDto.getRequesttime());
+							illegalReps.save(alarm);
+							isOk = false;
+							//System.out.println(">>>>>超时，非法"+dto.getBarcode());
+						}
+					} 
+				}
 			}
 		}
 		
-		res.setError(String.valueOf(ResultStatus.ILLEGAL_OUT_SUCCESS.getCode()));
 		res.setResponsetime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 		res.setResponseid(ioDto.getRequestid());
-		res.setData("illegal outbound");
+		if(isOk) {//合法
+			res.setError(String.valueOf(ResultStatus.ILLEGAL_OUT_REQ_OK.getCode()));
+			res.setData(ResultStatus.ILLEGAL_OUT_REQ_OK.getMessage());
+		}else {//非法
+			res.setError(String.valueOf(ResultStatus.ILLEGAL_OUT_BARCODE_ILLEGAL.getCode()));
+			res.setData(ResultStatus.ILLEGAL_OUT_BARCODE_ILLEGAL.getMessage());
+		}
 		return res;
 	}
 	

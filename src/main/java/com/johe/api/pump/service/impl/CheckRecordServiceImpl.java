@@ -71,10 +71,11 @@ public class CheckRecordServiceImpl implements CheckRecordService {
 		cre.setCheck_time(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 		cre.setCheck_type(dto.getCheck_type());
 		cre.setIn_stock_qty(dto.getIn_stock_qty());
-		cre.setInit_qty(0);
+		cre.setStock_qty(dto.getStock_qty());
+		cre.setInit_qty(dto.getInit_qty());
 		cre.setMea_unit(dto.getMea_unit());
 		cre.setMt_code(smallC.getCode());
-		cre.setMt_encode(barCode.substring(0, barCode.length()-4));
+		cre.setMt_encode(barCode.length()>14?barCode.substring(0, barCode.length()-4):barCode);
 		cre.setMt_fullname(dto.getMt_fullname());
 		cre.setOut_stock_qty(dto.getOut_stock_qty());
 		cre.setPerson_id(dto.getPerson_id());
@@ -170,6 +171,13 @@ public class CheckRecordServiceImpl implements CheckRecordService {
 		return mcDto;
 	}
 
+	private int convertToInt(Object obj) {
+		try{
+			return new Double(Double.parseDouble(obj.toString())).intValue();
+		}catch(Exception e) {
+			return 0;
+		}
+	}
 	
 	@Override
 	public MaterialCheckDto searchByBarcode(String barcode) throws Exception {
@@ -178,17 +186,26 @@ public class CheckRecordServiceImpl implements CheckRecordService {
 		MaterialEntity mt = mReps.findByBarcode(barcode);
 		if(mt == null) return null;
 		long mt_id = mt.getMaterialid();
-		InventoryBookEntity ibe = ibReps.findOne(mt_id);
+		String strBarcode = barcode.length()==14?barcode:barcode.substring(0, 14);
+		InventoryBookEntity ibe = ibReps.getEntityByBarcode(strBarcode);
 		long initQty=0,inTotalQty=0,outTotalQty=0,inventoryQty=0;
 		if(ibe != null) {
-			// 期初(期初结存)：物料ID、最早时间
-			initQty = ibReps.getInitQty(mt_id);
+			Object objInitQty = ibReps.getInitQty(strBarcode);
+			initQty = (objInitQty==null?0:convertToInt(objInitQty));
+			Object objInTotalQty = ibReps.getInTotalQty(strBarcode);
+			inTotalQty = (objInTotalQty==null?0:convertToInt(objInTotalQty));
+			Object objOutTotalQty = ibReps.getOutTotalQty(strBarcode);
+			outTotalQty = (objOutTotalQty==null?0:convertToInt(objOutTotalQty));
+			Object objInventoryQty = ibReps.getInventoryQty(strBarcode);
+			inventoryQty =  (objInventoryQty==null?0:convertToInt(objInventoryQty));
+			/*// 期初(期初结存)：物料ID、最早时间
+			initQty = ibReps.getInitQty(barcode);
 			// 入库(sum(出入库数量))：物料ID、收支类型=01（sum)
-			inTotalQty = ibReps.getInTotalQty(mt_id);
+			inTotalQty = ibReps.getInTotalQty(barcode);
 			// 出库(sum(出入库数量))：物料ID、收支类型=02（sum)
-			outTotalQty = ibReps.getOutTotalQty(mt_id);
+			outTotalQty = ibReps.getOutTotalQty(barcode);
 			// 库存(当期结存)：物料ID、最近时间
-			inventoryQty = ibReps.getInventoryQty(mt_id);
+			inventoryQty = ibReps.getInventoryQty(barcode);*/
 		}
 		mc.setInit_qty(initQty);
 		mc.setIn_stock_qty(inTotalQty);
@@ -220,7 +237,7 @@ public class CheckRecordServiceImpl implements CheckRecordService {
 	@Override
 	public MaterialCheckDto searchByMtId(long mt_id) throws Exception {
 		MaterialCheckDto mc = new MaterialCheckDto();
-		InventoryBookEntity ibe = ibReps.findOne(mt_id);
+		/*InventoryBookEntity ibe = ibReps.findOne(mt_id);
 		long initQty =0,inTotalQty =0,outTotalQty =0,inventoryQty =0;
 		if(ibe != null) {
 			initQty = ibReps.getInitQty(mt_id);
@@ -236,12 +253,40 @@ public class CheckRecordServiceImpl implements CheckRecordService {
 		// 出库(sum(出入库数量))：物料ID、收支类型=02（sum)
 		mc.setOut_stock_qty(outTotalQty);
 		// 库存(当期结存)：物料ID、最近时间
+		mc.setStock_qty(inventoryQty);*/
+		
+		return mc;
+	}
+
+	@Override
+	public MaterialCheckDto searchByMtBarcode(String mt_barcode) throws Exception {
+		String barcode = mt_barcode.length()==14?mt_barcode:mt_barcode.substring(0, 14);
+		MaterialCheckDto mc = new MaterialCheckDto();
+		InventoryBookEntity ibe = ibReps.getEntityByBarcode(barcode);
+		int initQty =0,inTotalQty =0,outTotalQty =0,inventoryQty =0;
+		if(ibe != null) {
+			Object objInitQty = ibReps.getInitQty(barcode);
+			initQty = (objInitQty==null?0:convertToInt(objInitQty));
+			Object objInTotalQty = ibReps.getInTotalQty(barcode);
+			inTotalQty = (objInTotalQty==null?0:convertToInt(objInTotalQty));
+			Object objOutTotalQty = ibReps.getOutTotalQty(barcode);
+			outTotalQty = (objOutTotalQty==null?0:convertToInt(objOutTotalQty));
+			Object objInventoryQty = ibReps.getInventoryQty(barcode);
+			inventoryQty =  (objInventoryQty==null?0:convertToInt(objInventoryQty));
+		}
+		// 期初(期初结存)：物料ID、最早时间
+		mc.setInit_qty(initQty);
+		// 入库(sum(出入库数量))：物料ID、收支类型=01（sum)
+		
+		mc.setIn_stock_qty(inTotalQty);
+		// 出库(sum(出入库数量))：物料ID、收支类型=02（sum)
+		mc.setOut_stock_qty(outTotalQty);
+		// 库存(当期结存)：物料ID、最近时间
 		mc.setStock_qty(inventoryQty);
 		
 		return mc;
 	}
 
-	
 
 	
 	

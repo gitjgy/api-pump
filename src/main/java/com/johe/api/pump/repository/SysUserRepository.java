@@ -11,7 +11,7 @@ import com.johe.api.pump.entity.SysUserEntity;
 
 public interface SysUserRepository extends JpaRepository<SysUserEntity, Long>,
 								JpaSpecificationExecutor<SysUserEntity> {
-	
+	SysUserEntity findByUserCode(String userCode);
 	SysUserEntity findByAccount(String account);
 	
 	SysUserEntity findByAccountAndPwd(String account,String pwd);
@@ -23,7 +23,7 @@ public interface SysUserRepository extends JpaRepository<SysUserEntity, Long>,
 			"LEFT JOIN t_sys_role r ON r.ROLE_ID=ru.ROLE_ID " + 
 			"LEFT JOIN t_sys_role_menu_func_pda rmf ON rmf.ROLE_ID=r.ROLE_ID " + 
 			"LEFT JOIN t_sys_menu_pda md ON rmf.PDA_MENU_ID=md.PDA_MENU_ID " + 
-			"WHERE u.POLICY_NO='N' " + 
+			"WHERE u.POLICY_NO='N' AND ru.DEL_FLAG='N' " + 
 			"AND u.ACCOUNT=?1 " + 
 			"AND u.PWD=?2 " + 
 			"AND md.PDA_MENU_NAME IS NOT NULL",nativeQuery=true)//01主管、02上级、03库管 、04普通
@@ -61,6 +61,7 @@ public interface SysUserRepository extends JpaRepository<SysUserEntity, Long>,
 //			" LIMIT 0,1;"
 			,nativeQuery=true)
 	List<Object> getBuyer();
+	
 	
 	
 }

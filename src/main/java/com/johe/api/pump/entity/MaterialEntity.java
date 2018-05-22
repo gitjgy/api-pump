@@ -23,7 +23,7 @@ public class MaterialEntity {
 	@Setter @Getter @Column(name="mt_id") @ApiModelProperty(value="物料ID") private Long materialid;
 	@Setter @Getter @ApiModelProperty(value="物料代码") private String mt_code;
 	@Setter @Getter @ApiModelProperty(value="物料属性") private String mt_attr;
-	@Setter @Getter@Column(name="mt_barcode") @ApiModelProperty(value="物料条码（条形码）") private String barcode;
+	@Setter @Getter @Column(name="mt_barcode") @ApiModelProperty(value="物料条码（条形码）") private String barcode;
 	@Setter @Getter @ApiModelProperty(value="物料名称") private String mt_name;
 	@Setter @Getter @ApiModelProperty(value="物料全名") private String mt_fullname;
 	@Setter @Getter @ApiModelProperty(value="物料特性：01普通、02市采、03重要、04关键") private String mt_feature;
@@ -41,6 +41,7 @@ public class MaterialEntity {
 	@Setter @Getter @ApiModelProperty(value="仓位架ID") private long sbin_rack_id;
 	@Setter @Getter @ApiModelProperty(value="仓位位ID") private long sbin_pos_id;
 	@Setter @Getter @ApiModelProperty(value="供应商ID") private long sup_id;
+	@Setter @Getter @Column(name="mt_assist_attr") @ApiModelProperty(value="物料单价") private String price;
 	
 	@Setter @Getter 
 	@ManyToOne(fetch=FetchType.EAGER) 

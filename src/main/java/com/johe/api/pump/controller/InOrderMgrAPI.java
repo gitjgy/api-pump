@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.johe.api.pump.dto.AuditInOrderDto;
 import com.johe.api.pump.dto.AuditInOrderItemDto;
+import com.johe.api.pump.dto.BarcodeIsUsableDto;
 import com.johe.api.pump.dto.InOrderDto;
 import com.johe.api.pump.dto.ScanInOrderDto;
 import com.johe.api.pump.entity.AuditRecordEntity;
@@ -176,7 +177,7 @@ public class InOrderMgrAPI {
 	public ResultEntity<InOrderEntity> createInOrderPost(@ApiParam @RequestBody InOrderDto object) {
 		InOrderEntity ioe = null;
 		try {
-			ioe = inOrderService.save(object);
+			ioe = inOrderService.save(object);			
 		} catch (Exception e) {
 			return new ResultEntity<InOrderEntity>(ResultStatus.CREATE_FAILED.getCode(), 
 					ResultStatus.CREATE_FAILED.getMessage(), null);
@@ -283,7 +284,6 @@ public class InOrderMgrAPI {
 			@ApiImplicitParam(name = "bar_code", value = "条形码", required = true, dataType = "string", paramType = "query") })
 	public ResultEntity<InOrderItemEntity> scanAuditInOrder(@PathVariable("order_id") Long orderId,
 			@PathVariable("bar_code") String barcode) {
-		System.out.println("[入库审核-条形码]" + barcode);
 		return new ResultEntity<InOrderItemEntity>(ResultStatus.OK.getCode(), ResultStatus.OK.getMessage(),
 				inOrderItemRepository.findBySinidAndBarcode(orderId,
 						barcode.length() > 18 ? barcode.substring(0, 18) : barcode));// 截掉条形码后面的编号
@@ -304,7 +304,8 @@ public class InOrderMgrAPI {
 			
 			//检测库存预警（历史）
 			for(int i=0;i<object.getItem_list().size();i++) {
-				AuditInOrderItemDto it = object.getItem_list().get(i);
+//				AuditInOrderItemDto it = object.getItem_list().get(i);
+				InOrderItemEntity it = object.getItem_list().get(i);
 				mtService.addHistoryAlarm(it.getBarcode(), it.getAct_qty_recv());
 			}
 			
@@ -317,6 +318,27 @@ public class InOrderMgrAPI {
 		return new ResultEntity<String>(ResultStatus.OK.getCode(), ResultStatus.OK.getMessage(), "OK");
 	}
 
+	//
+	// 判断条形码是否可用
+	@PostMapping("/verify_barcode")
+	@ApiOperation(value = "入库时，判断条形码是否可用", notes = "入库单（采购入库、归还入库、其他入库、加工入库）")
+	public ResultEntity<BarcodeIsUsableDto> verifyBarcodeIsUsable(@ApiParam @RequestBody BarcodeIsUsableDto object) {
+
+		if (!checkBarcodeDto(object)) {
+			return new ResultEntity<BarcodeIsUsableDto>(ResultStatus.ARGUMENT_VALUE_ILLEGAL.getCode(),
+					ResultStatus.ARGUMENT_VALUE_ILLEGAL.getMessage(), null);
+		}
+		BarcodeIsUsableDto result = null;
+		try {
+			result = inOrderService.verifyBarcodeIsUsable(object);		
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return new ResultEntity<BarcodeIsUsableDto>(ResultStatus.OK.getCode(), ResultStatus.OK.getMessage(), result);
+	}
+		
 	private boolean checkScanDto(ScanInOrderDto dto) {
 		if (dto == null || !AppUtil.isOK(dto.getDept(), 32, true) || !AppUtil.isOK(dto.getMake_inst(), 64, true)
 				|| !AppUtil.isOK(dto.getSummary(), 64, false) || !AppUtil.isOK(dto.getTally_person(), 32, false)
@@ -353,10 +375,11 @@ public class InOrderMgrAPI {
 		
 		// 校验物料
 		for(int i=0;i<dto.getItem_list().size();i++) {
-			AuditInOrderItemDto item = dto.getItem_list().get(i);
-			if(!AppUtil.isOK(item.getMea_unit(), 16, true) 
-				|| !AppUtil.isOK(item.getMt_name(), 64, true) 
-				|| !AppUtil.isOK(item.getMt_fullname(), 128, true) 
+//			AuditInOrderItemDto item = dto.getItem_list().get(i);
+			InOrderItemEntity item = dto.getItem_list().get(i);
+			if(!AppUtil.isOK(item.getMeasure_unit(), 16, true) 
+//				|| !AppUtil.isOK(item., 64, true) 
+//				|| !AppUtil.isOK(item.getMt_fullname(), 128, true) 
 				|| !AppUtil.isOK(item.getMt_feature(), 2, true) 
 				|| !AppUtil.isOK(item.getBarcode(), 18, true)) {
 				isOk = false;
@@ -392,4 +415,18 @@ public class InOrderMgrAPI {
 		return isOk;
 	}
 
+	
+	private boolean checkBarcodeDto(BarcodeIsUsableDto dto) {
+		if (dto == null || !AppUtil.isOK(dto.getBar_code(), 18, true)) {
+			return false;
+		}
+		// 入库类型（采购入库、归还入库、其他入库、加工入库）
+		if (StringUtils.isNotBlank(dto.getIn_type()) && (dto.getIn_type().equals("02") || dto.getIn_type().equals("03")
+				|| dto.getIn_type().equals("04") || dto.getIn_type().equals("05"))) {
+		} else {
+			return false;
+		}
+		
+		return true;
+	}
 }

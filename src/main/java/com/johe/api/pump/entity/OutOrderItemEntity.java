@@ -32,8 +32,8 @@ public class OutOrderItemEntity {
 	@Setter @Getter @ApiModelProperty(value="单价") private double ospitem_price;
 	@Setter @Getter @ApiModelProperty(value="计量单位") private String ospitem_measure_unit;
 	@Setter @Getter @ApiModelProperty(value="金额") private double ospitem_amount=0.00;
-	@Setter @Getter @ApiModelProperty(value="应出数量") private double item_qty=0.00;
-	@Setter @Getter @ApiModelProperty(value="实出数量") private double ospitem_quantity=0.00;
+	@Setter @Getter @Column(name="ospitem_quantity") @ApiModelProperty(value="实出数量") private double item_qty=0.00;
+	@Setter @Getter @Column(name="item_qty") @ApiModelProperty(value="应出数量") private double ospitem_quantity=0.00;
 	@Setter @Getter @ApiModelProperty(value="发货仓库") private long ospitem_delivery_stock;
 	@Setter @Getter @ApiModelProperty(value="仓位区ID") private long ospitem_out_bin_area;
 	@Setter @Getter @ApiModelProperty(value="仓位架ID") private long ospitem_out_bin_rack;

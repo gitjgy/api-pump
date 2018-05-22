@@ -1,5 +1,6 @@
 package com.johe.api.pump.controller;
 
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,6 +14,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +49,8 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("/api/v1/illegal")
 @RestController
 public class IllegalOutAPI {
+	
+	private final static Logger logger = LoggerFactory.getLogger(IllegalOutAPI.class);
 	
 	@Autowired
 	IllegalAlarmRepository illgReps;
@@ -163,7 +168,7 @@ public class IllegalOutAPI {
     @PostMapping("/upload")
     @ApiOperation(value = "上传非法出库物料数据",notes="上传非法出库物料数据")
     public ResultEntity<ResponseIllegalOutDto> uploadIllegalData(@RequestBody(required=true) IllegalOutDto jsonobject){
-    	
+    	System.out.println(">>>>>>>>>>>start to call [upload] interface.....");
     	if(!checkDto(jsonobject)) {
     		return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.ARGUMENT_VALUE_ILLEGAL.getCode(),
     				ResultStatus.ARGUMENT_VALUE_ILLEGAL.getMessage(),null);
@@ -179,6 +184,7 @@ public class IllegalOutAPI {
     	
     	ResponseIllegalOutDto ioe = null;
 		try {
+			System.out.println(">>>uploading.....");
 			ioe = ioService.checkIsIllegal(jsonobject);
 			if(ioe == null) {
 				return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getCode(),
@@ -187,13 +193,16 @@ public class IllegalOutAPI {
 								new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
 								String.valueOf(ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getCode()),null));
 			}
+			System.out.println(">>>uploadi finish");
 		} catch (Exception e) {
+			System.out.println(">>>uploadi exception");
 			e.printStackTrace();
 			return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.UNKNOWN_EXCEPTION.getCode(),
 					ResultStatus.UNKNOWN_EXCEPTION.getMessage(),
 					new ResponseIllegalOutDto(jsonobject.getRequestid(),
 							new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
-							String.valueOf(ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getCode()),null));
+							String.valueOf(ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getCode()),
+							"[Exception]:"+e.getMessage()));
 		}
     	
     	return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.ILLEGAL_OUT_SUCCESS.getCode(),
@@ -204,8 +213,13 @@ public class IllegalOutAPI {
     private boolean checkDto(IllegalOutDto object) {
 		if(object == null || object.getMaterial() == null 
 				|| object.getMaterial().size() == 0
+				|| object.getRequesttime() == null
+				|| object.getClosetime() == null
+				|| object.getEquipment() == null
+				|| object.getOptperson() == null
+				|| object.getRequestid() == null
 				|| !AppUtil.isOK(object.getRequestid(),16,true) 
-				|| !AppUtil.isValidDate(object.getOperatetime(), "yyyy-MM-dd HH:mm:ss") 
+				|| !AppUtil.isValidDate(object.getOpttime(), "yyyy-MM-dd HH:mm:ss") 
 				|| !AppUtil.isOK(object.getRequestauth(),32,true)) {
 			return false;
     	}
@@ -214,14 +228,16 @@ public class IllegalOutAPI {
     
     @PostMapping("/pnt")
     @ApiOperation(value = "授时（获取服务器时间）",notes="授时（获取服务器时间）")
-    public ResultEntity<ResponseIllegalOutDto> getServerTime(@RequestBody(required=true) GrantTimeDto object){
-    	
+    public ResultEntity<ResponseIllegalOutDto> getServerTime(@RequestBody(required=true) GrantTimeDto object) throws UnsupportedEncodingException{
+    	logger.debug(">>>>>>>>>>> Calling API[/api/v1/illegal],param={}",object.toString());
     	if(!checkGrantTime(object)) {
+    		logger.debug(">>> The parameter is illegal, param=[{}]",object.toString());
     		return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.ARGUMENT_VALUE_ILLEGAL.getCode(),
     				ResultStatus.ARGUMENT_VALUE_ILLEGAL.getMessage(),null);
     	}
     	
     	if(!AppConstants.ILLEGA_OUT_SECRET_KEY.equalsIgnoreCase(object.getRequestauth())) {// 密钥不正确
+    		logger.debug(">>> The Request Secret is wrong, param={}",object.getRequestauth());
     		return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.ILLEGAL_OUT_REQ_AUTH_ERR.getCode(),
 					ResultStatus.ILLEGAL_OUT_REQ_AUTH_ERR.getMessage(),
 					new ResponseIllegalOutDto(object.getRequestid(),
@@ -229,25 +245,30 @@ public class IllegalOutAPI {
 							String.valueOf(ResultStatus.ILLEGAL_OUT_REQ_AUTH_ERR.getCode()),null));
     	}
     	
+    	logger.debug(">>> The parameter is OK");
     	String strTime = null;
 		try {
 			strTime = DateTimeUtil.getServerTime(timeMap.get(object.getPattern()));
 			if(strTime == null) {
+				logger.error(">>> Calling API[/api/v1/illegal],There is a SQL Exception.The Return value is null.");
 				return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getCode(),
 						ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getMessage(),
 						new ResponseIllegalOutDto(object.getRequestid(),
 								new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
 								String.valueOf(ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getCode()),null));
 			}
+			logger.debug(">>> The return value is [{}]",strTime);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(">>> Call API[/api/v1/illegal] is Failed,Exception = [{}] ",e.getMessage());
 			return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.UNKNOWN_EXCEPTION.getCode(),
 					ResultStatus.UNKNOWN_EXCEPTION.getMessage(),
 					new ResponseIllegalOutDto(object.getRequestid(),
 							new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
-							String.valueOf(ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getCode()),null));
+							String.valueOf(ResultStatus.ILLEGAL_OUT_REQ_SQL_EXP.getCode()),
+							"[Exception]:"+e.getMessage()));
 		}
     	
+		logger.debug("Call API[/api/v1/illegal] is Finish. <<<<<<<<<<");
     	return new ResultEntity<ResponseIllegalOutDto>(ResultStatus.OK.getCode(),
     			ResultStatus.OK.getMessage(),
     			new ResponseIllegalOutDto(object.getRequestid(),

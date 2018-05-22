@@ -42,6 +42,7 @@ public class InOrderEntity {
 	@Setter @Getter @ApiModelProperty(value="保管人") private String sin_keeper;
 	@Setter @Getter @ApiModelProperty(value="业务员") private String sin_salesman;
 	@Setter @Getter @ApiModelProperty(value="负责人") private String sin_leader;
+	@Setter @Getter @ApiModelProperty(value="归还人") private String return_person;
 	@Setter @Getter @ApiModelProperty(value="物料特性") private String mt_feature;
 	@Setter @Getter @ApiModelProperty(value="收货仓库ID") private long sin_receive_stock;
 	@Setter @Getter @ApiModelProperty(value="供应商ID") private long sin_supply;

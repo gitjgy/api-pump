@@ -17,5 +17,5 @@ public interface OutOrderService {
 //	OutOrderEntity audit(String bizType, long orderId, long auditUserId, String status, String auditSuggestion);
 	
 	// 出库单审核
-	void audit(AuditOutOrderDto dto) throws Exception ;
+	void audit(AuditOutOrderDto dto, boolean isAuto) throws Exception ;
 }

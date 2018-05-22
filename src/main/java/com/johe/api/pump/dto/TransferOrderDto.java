@@ -11,13 +11,13 @@ import lombok.Data;
 public class TransferOrderDto {	
 	
 	@ApiModelProperty(value="调拨单ID") private Long tran_id;
-	@ApiModelProperty(value="物流公司") private String tran_logistics_co;
-	@ApiModelProperty(value="物流单号") private String tran_logistics_order_sn;
-	@ApiModelProperty(value="泵站名称",required=true) private String tran_pump_name;
-	@ApiModelProperty(value="对方单据号") private String tran_other_order_sn;
+//	@ApiModelProperty(value="物流公司") private String tran_logistics_co;
+//	@ApiModelProperty(value="物流单号") private String tran_logistics_order_sn;
+//	@ApiModelProperty(value="泵站名称") private String tran_pump_name;
+//	@ApiModelProperty(value="对方单据号") private String tran_other_order_sn;
 	@ApiModelProperty(value="调拨单编号") private String tran_order_sn;
 	@ApiModelProperty(value="调出仓库",required=true) private long tran_out_stock;
-	@ApiModelProperty(value="调出地址",required=true) private String tran_out_address;
+//	@ApiModelProperty(value="调出地址") private String tran_out_address;
 	@ApiModelProperty(value="调拨部门",required=true) private String tran_dept;
 	@ApiModelProperty(value="调拨领导",required=true) private String tran_leader;
 	@ApiModelProperty(value="调拨人",required=true) private String tran_transfer_person;

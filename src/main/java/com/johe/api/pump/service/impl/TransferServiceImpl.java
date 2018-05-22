@@ -185,15 +185,15 @@ public class TransferServiceImpl implements TransferService {
 		o.setTran_date(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(now));
 		o.setTran_dept(dto.getTran_dept());
 		o.setTran_leader(dto.getTran_leader());
-		o.setTran_logistics_co(dto.getTran_logistics_co());
-		o.setTran_logistics_order_sn(dto.getTran_logistics_order_sn());
+		o.setTran_logistics_co("");//(dto.getTran_logistics_co());
+		o.setTran_logistics_order_sn("");//(dto.getTran_logistics_order_sn());
 		o.setTran_order_sn(seqService.queryByBiztype(AppConstants.SN_PREFIX_MAP.get("DB")));
 		
 //		o.setTran_order_sn(tran_order_sn);//调拨单编号 
-		o.setTran_other_order_sn(dto.getTran_other_order_sn());
-		o.setTran_out_address(dto.getTran_out_address());
+		o.setTran_other_order_sn("");//(dto.getTran_other_order_sn());
+		o.setTran_out_address("");//(dto.getTran_out_address());
 		o.setTran_out_stock(dto.getTran_out_stock());
-		o.setTran_pump_name(dto.getTran_pump_name());
+		o.setTran_pump_name("");//(dto.getTran_pump_name());
 		o.setTran_receipt_date(dto.getTran_receipt_date());
 		o.setTran_transfer_person(dto.getTran_transfer_person());
 		o.setTran_use_person(dto.getTran_use_person());
@@ -294,15 +294,28 @@ public class TransferServiceImpl implements TransferService {
 			AuditTransferItemDto it = dto.getItem_list().get(i);
 			itemReps.auditOrderItem(it.getBarcode(), it.getAct_qty_tran(), it.getTran_id(),
 					it.getProduct_code(), it.getTranitem_out_stock(), it.getTranitem_out_bin_code(),
-					it.getTranitem_in_stock(),it.getTranitem_in_bin_code());
+					it.getTranitem_in_stock(),it.getTranitem_in_bin_code(),it.getMt_feature());
 			if(dto.getAudit_status().equals("06")) {//库管审核通过时，才更新物料库存
 				// 减少调出仓库的库存（调出仓库减库存）
 				MaterialEntity mt = mReps.findByBarcode(it.getBarcode());
-				mReps.update(-it.getAct_qty_tran(), -it.getAct_qty_tran(), mt.getMaterialid());// 调出库减库存         
+				double qty = 0;
+				double qtyTotal = 0;
+				if(it.getAct_qty_tran()>mt.getMt_in_remain_quantity()) {
+					qty = 0;
+				}else {
+					qty = mt.getMt_in_remain_quantity() -it.getAct_qty_tran();
+				}
+				if(it.getAct_qty_tran() > mt.getMt_in_total_quantity()) {
+					qtyTotal = 0;
+				}else {
+					qtyTotal = mt.getMt_in_total_quantity() - it.getAct_qty_tran();
+				}
+				mReps.update(qtyTotal, qty, mt.getMaterialid());// 调出库减库存         
 				
 				// 添加库存台账（调出）
 				InventoryBookEntity ibeO = new InventoryBookEntity();
 				ibeO.setMt_id(mt.getMaterialid());
+				ibeO.setBarcode(mt.getBarcode().substring(0, 14));
 				ibeO.setCre_date(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
 				ibeO.setIb_type("09");//台账类型：01采购入库、02归还入库、03其它入库、04加工入库、05调拨入库、06借用出库、07领料出库、08加工出库、09调拨出库
 				ibeO.setOrder_id(dto.getTran_id());
@@ -310,7 +323,7 @@ public class TransferServiceImpl implements TransferService {
 				ibeO.setIn_out_type("02");//收入支出类型：01收入、02支出
 				ibeO.setLast_qty(mt.getMt_in_remain_quantity());// 期初结存 就是 库存更新前的 实际库存
 				ibeO.setIn_out_qty(it.getAct_qty_tran());// 本次的调出库数量
-				ibeO.setCur_qty(mt.getMt_in_remain_quantity()-it.getAct_qty_tran());//当期结存 =（期初结存 - 调出库数量）
+				ibeO.setCur_qty(qty);//当期结存 =（期初结存 - 调出库数量）
 				ibReps.save(ibeO);
 				// TODO: 调拨的调入逻辑待完善
 				// 调入的物料条形码，仓库、仓位有变化
@@ -321,7 +334,8 @@ public class TransferServiceImpl implements TransferService {
 					mReps.insert(mt.getSup_id(), it.getTranitem_in_stock(), mt.getStockbin_area().getSbin_id(), mt.getStockbin_rack().getSbin_id(),
 							mt.getStockbin_pos().getSbin_id(), it.getProduct_code(), mt.getMt_name(), mt.getMt_fullname(), newBarCode,
 							mt.getCategory_big().getId(), mt.getCategory_small().getId(), mt.getMt_feature(), mt.getMt_measure_unit(),
-							it.getAct_qty_tran(), it.getAct_qty_tran(), "01", "01", mt.getMt_min_quantity(), mt.getMt_max_quantity());
+							it.getAct_qty_tran(), it.getAct_qty_tran(), "01", "01", mt.getMt_min_quantity(), 
+							mt.getMt_max_quantity(),String.valueOf(it.getTranitem_price()));
 																	   //01在用、01正常
 					MaterialEntity mtNew= mReps.findByBarcode(newBarCode);//新增后，回查物料ID
 					mtId = mtNew.getMaterialid();
@@ -342,7 +356,7 @@ public class TransferServiceImpl implements TransferService {
 				ibeI.setIn_out_type("01");//收入支出类型：01收入、02支出
 				ibeI.setLast_qty(mt.getMt_in_remain_quantity());// 期初结存 就是 库存更新前的 实际库存
 				ibeI.setIn_out_qty(it.getAct_qty_tran());// 本次的调出库数量
-				ibeI.setCur_qty(mt.getMt_in_remain_quantity()-it.getAct_qty_tran());//当期结存 =（期初结存 - 调出库数量）
+				ibeI.setCur_qty(qty);//当期结存 =（期初结存 - 调出库数量）
 				ibReps.save(ibeI);
 			}
 		}
@@ -351,10 +365,8 @@ public class TransferServiceImpl implements TransferService {
 		auditReps.create(dto.getAudit_person_id(), dto.getReject_reason(), "06", dto.getAudit_status(),
 				auditDateTime, dto.getTran_id());
 		
-		String auditRecords = " -> 库管审核(s%)s% ";
 		// 更新审核消息
-		msgReps.updateAuditMsg(auditDateTime, String.format(auditRecords, dto.getAudit_person_name(),
-				dto.getAudit_status().equals("06")?"通过  -> 完成":"驳回"), dto.getTran_id(), "09");
+		msgReps.updateAuditMsg(auditDateTime, " -> 库管审核("+dto.getAudit_person_name()+")"+(dto.getAudit_status().equals("06")?"通过  -> 完成":"驳回"), dto.getTran_id(), "09");
 		
 	}
 

@@ -105,6 +105,7 @@ public class OutOrderMgrAPI {
 				} else {
 					if ("01".equals(status)) {// 待审核
 						inStatus.value("10");//
+						inStatus.value("01");//
 //						inStatus.value("04");// 上级审核通过后，才能轮到库管审核
 //						inStatus.value("0");// 上级审核通过后，才能轮到库管审核
 						
@@ -360,7 +361,7 @@ public class OutOrderMgrAPI {
 		}
 		try {
 			// 审核出库单、栏目、更新物料库存、添加审核记录
-			outOrderService.audit(object);
+			outOrderService.audit(object,false);
 			
 			//检测库存预警（历史）
 			for(int i=0;i<object.getItem_list().size();i++) {

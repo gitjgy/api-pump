@@ -28,6 +28,7 @@ public class SysUserEntity {
 	@Setter @Getter @ApiModelProperty(value="更新时间") private String upt_time;
 	@Setter @Getter @ApiModelProperty(value="单位ID") private String org_id;
 	@Setter @Getter @ApiModelProperty(value="部门ID") private String cert_no;
+	@Setter @Getter @ApiModelProperty(value="用户代号") @Column(name="USER_CODE") private String userCode;
 	@Setter @Getter @Column(name="worker_no") @ApiModelProperty(value="职位") private String wkno;
 	
 	@Setter @Getter 

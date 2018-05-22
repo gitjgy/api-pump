@@ -5,9 +5,9 @@
 
 	<groupId>com.johe.pump.api</groupId>
 	<artifactId>api-pump</artifactId>
-	<version>0.0.1-Release</version>
-	 <packaging>jar</packaging> 
-	<!--<packaging>war</packaging>-->
+	<version>1.0.9-Release</version> 
+	<packaging>war</packaging>
+	 <!-- 打war包 -->
 
 	<name>api-pump</name>
 	<description>Api Pump Station project for Spring Boot</description>
@@ -94,6 +94,7 @@
 		    <artifactId>commons-codec</artifactId>
 		    </dependency>
 				<!-- 打war包 3 -->
+				 
  		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
@@ -103,12 +104,13 @@
 
 	<build>
 		<plugins>
+			<!--
 			 <plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin> 
+			</plugin>   --> 
 			<!-- 打war包 4 -->
- 			<!--<plugin>
+ 			 <plugin>
 	            <groupId>org.springframework.boot</groupId>
 	            <artifactId>spring-boot-maven-plugin</artifactId>
 	            <executions>
@@ -127,9 +129,8 @@
 		          <skipTests>true</skipTests>  
 		        </configuration>  
 		      </plugin>  
-		     --> 
+		   
 		</plugins>
 	</build>
-
 
 </project>

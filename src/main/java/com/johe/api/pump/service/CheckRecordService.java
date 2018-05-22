@@ -21,5 +21,8 @@ public interface CheckRecordService {
 	
 	// 手动盘点 选择物料搜索（物料ID）搜索（期初量、入库量、出库量、库存量、品名、仓库、仓位、类别）
 	MaterialCheckDto searchByMtId(long mt_id) throws Exception ;
+	
+	// 手动盘点 选择物料搜索（物料条码（前14位））搜索（期初量、入库量、出库量、库存量、品名、仓库、仓位、类别）
+	MaterialCheckDto searchByMtBarcode(String mt_barcode) throws Exception ;
 
 }

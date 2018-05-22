@@ -26,11 +26,11 @@ public interface OutOrderRepository extends JpaRepository<OutOrderEntity, Long>,
 			"  o.osp_pick_address," + 
 			"  o.osp_pick_person,  " + 
 			"  o.osp_date" + 
-			"FROM" + 
+			" FROM" + 
 			"  pump_out_stock_pick_order o " + 
 			"  INNER JOIN pump_out_stock_pick_order_item i " + 
 			"    ON i.osp_id = o.osp_id " + 
-			"WHERE o.osp_type = '01' " + // 01借用
+			" WHERE o.osp_type = '01' " + // 01借用
 			"  AND o.osp_status = '08' " + //08完成
 			"  AND i.ospitem_barcode =?1",nativeQuery=true)
 	List<Object> getPickInfo(String barCode);

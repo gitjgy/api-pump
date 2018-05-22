@@ -36,23 +36,26 @@ public class MessageAPI {
 	MessageRepository msgReps;
 	
     
-    @GetMapping("/{page}/{size}")
+    @GetMapping("/{user_id}/{page}/{size}")
     @ApiOperation(value = "获取库管审核消息列表",notes="获取库管审核消息列表")
     @ApiImplicitParams({
+    	@ApiImplicitParam(name="user_id",value="登录用户ID",required=true, dataType="long",paramType="query"),
     	@ApiImplicitParam(name="page",value="页码（从0开始）",required=true, dataType="int",paramType="query"),
     	@ApiImplicitParam(name="size",value="每页显示条数",required=true, dataType="int",paramType="query")
     	})    
     public ResultEntity<Page<MessageEntity>> getMessages( 
+    		@PathVariable("user_id")long userId,
     		@PathVariable("page")int page, 
     		@PathVariable("size")int size){
+    	final long user_id=userId;
     	Page<MessageEntity>  illegals = msgReps.findAll(new Specification<MessageEntity>() {
 
 			@Override
 			public Predicate toPredicate(Root<MessageEntity> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
 				List<Predicate> list = new ArrayList<Predicate>();
-				
-				list.add(cb.equal(root.<String>get("audit_post"), "03"));// 审核职位：03库管
-				list.add(cb.notEqual(root.<Long>get("relate_id"), -1));
+				list.add(cb.equal(root.<Long>get("msg_creator"), user_id));
+				//list.add(cb.equal(root.<String>get("audit_post"), "03"));// 审核职位：03库管
+				//list.add(cb.notEqual(root.<Long>get("relate_id"), -1));
 				
 				query.orderBy(cb.desc(root.get("send_time")));				
 				Predicate[] pres = new Predicate[list.size()];

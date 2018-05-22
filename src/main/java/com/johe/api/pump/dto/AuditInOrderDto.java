@@ -2,6 +2,8 @@ package com.johe.api.pump.dto;
 
 import java.util.List;
 
+import com.johe.api.pump.entity.InOrderItemEntity;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -17,7 +19,7 @@ public class AuditInOrderDto {
 	@ApiModelProperty(value="审核人ID",required=true) private long audit_person_id;
 	@ApiModelProperty(value="审核人名称",required=true) private String audit_person_name;
 	@ApiModelProperty(value="审核意见",required=true) private String reject_reason;
-	
-	@ApiModelProperty(value="入库单对应的物料列表",required=true) private List<AuditInOrderItemDto> item_list;
+//	@ApiModelProperty(value="入库单对应的物料列表",required=true) private List<AuditInOrderItemDto> item_list;
+	@ApiModelProperty(value="入库单对应的物料列表",required=true) private List<InOrderItemEntity> item_list;
 	
 }

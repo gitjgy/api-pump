@@ -46,7 +46,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			.and()
 			.csrf().disable()
 //			.authorizeRequests().antMatchers(HttpMethod.POST,"/users/signup")// 所有 /users/signup 的POST请求 都放行
-			.authorizeRequests().antMatchers("/login","/api/v1/illegal/upload")// 外部 上传非法出库数据 的请求放行
+			.authorizeRequests().antMatchers("/login","/api/v1/illegal/upload","/api/v1/illegal/pnt")// 外部 上传非法出库数据 的请求放行
 			.permitAll()
 			.anyRequest().authenticated()  // 所有请求需要身份认证
 			.and()

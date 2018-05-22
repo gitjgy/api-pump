@@ -149,6 +149,7 @@ public class CheckRecordAPI {
 					mt.setMt_category_small(Long.parseLong(String.valueOf(obj[5])));
 					mt.setMt_feature(String.valueOf(obj[6]));
 					mt.setMt_code(String.valueOf(obj[7]));
+					mt.setPrice(String.valueOf(obj[8]));
 					mtList.add(mt);
 				}
 			}
@@ -163,12 +164,28 @@ public class CheckRecordAPI {
 	
 	
 	// 根据物料ID，获取物料的期初、库存、入库、出库数据
-	@GetMapping("/search/mtid/{mt_id}")
+/*	@GetMapping("/search/mtid/{mt_id}")
 	@ApiOperation(value = "获取物料的期初、库存、入库、出库数据", notes = "获取物料的期初库存、入库、出库、数据")
 	public ResultEntity<MaterialCheckDto> searchQtyByMtId(@PathVariable("mt_id") long mt_id){
 		MaterialCheckDto mc = null;
 		try {
 			mc = crService.searchByMtId(mt_id);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResultEntity<MaterialCheckDto>(ResultStatus.UNKNOWN_EXCEPTION.getCode(),
+					ResultStatus.UNKNOWN_EXCEPTION.getMessage(), null);
+		}
+
+		return new ResultEntity<MaterialCheckDto>(ResultStatus.OK.getCode(), ResultStatus.OK.getMessage(), mc);
+	}*/
+	
+	// 根据物料ID，获取物料的期初、库存、入库、出库数据
+	@GetMapping("/search/mtbarcode/{mt_barcode}")
+	@ApiOperation(value = "获取物料的期初、库存、入库、出库数据", notes = "获取物料的期初库存、入库、出库、数据")
+	public ResultEntity<MaterialCheckDto> searchQtyByMtId(@PathVariable("mt_barcode") String mt_barcode){
+		MaterialCheckDto mc = null;
+		try {
+			mc = crService.searchByMtBarcode(mt_barcode);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResultEntity<MaterialCheckDto>(ResultStatus.UNKNOWN_EXCEPTION.getCode(),

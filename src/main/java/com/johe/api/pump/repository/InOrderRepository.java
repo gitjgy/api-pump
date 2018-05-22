@@ -31,4 +31,8 @@ public interface InOrderRepository extends JpaRepository<InOrderEntity, Long>,
 	@Transactional
 	@Query(value="UPDATE pump_stockin_order p SET p.sin_status=?1,p.sin_audit_person=?2,p.sin_reject_reason=?3,p.sin_audit_date=?4 WHERE p.sin_id=?5",nativeQuery=true)
 	public void auditOrder(String sin_status,String audit_person,String reject_reason,String audit_date,long sinId);
+	
+	// 获取条码对应的入库记录
+	@Query(value="SELECT COUNT(*) FROM pump_stockin_order p LEFT JOIN pump_stockin_order_item it ON p.sin_id=it.sin_id WHERE p.sin_type IN ('02','03','04','05') AND p.sin_status in('01','02','04','06','08','10') AND it.siitem_barcode=?1",nativeQuery=true)
+	long getCountForBarcode(String barCode);		
 }

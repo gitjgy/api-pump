@@ -1,6 +1,7 @@
 package com.johe.api.pump.service;
 
 import com.johe.api.pump.dto.AuditInOrderDto;
+import com.johe.api.pump.dto.BarcodeIsUsableDto;
 import com.johe.api.pump.dto.InOrderDto;
 import com.johe.api.pump.dto.ScanInOrderDto;
 import com.johe.api.pump.entity.InOrderEntity;
@@ -18,4 +19,7 @@ public interface InOrderService {
 	
 	// 入库审核
 	void audit(AuditInOrderDto dto) throws Exception;
+	
+	// 校验条形码是否可用
+	BarcodeIsUsableDto verifyBarcodeIsUsable(BarcodeIsUsableDto dto) throws Exception;
 }

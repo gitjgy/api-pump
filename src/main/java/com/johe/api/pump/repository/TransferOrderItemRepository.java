@@ -21,9 +21,9 @@ public interface TransferOrderItemRepository extends JpaRepository<TransferItemE
 	// 调拨单栏目审核（更新 实出数量、条形码）
 	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE pump_transfer_order_item p SET p.tranitem_barcode=?1,p.tranitem_quantity=?2 "
+	@Query(value = "UPDATE pump_transfer_order_item p SET p.tranitem_barcode=?1,p.item_qty=?2,p.tranitem_quantity=?2,p.mt_feature=?9 "
 			+ "WHERE p.tran_id=?3 AND p.tranitem_product_code=?4 AND p.tranitem_out_stock=?5 "
-			+ "AND p.tranitem_out_bin_code=?6 AND p.tranitem_in_stock=?7 AND p.tranitem_in_bin_code=?8", nativeQuery = true)
+			+ "AND p.tranitem_out_bin_code=?6 AND p.tranitem_in_stock=?7 AND p.tranitem_in_bin_code=?8 ", nativeQuery = true)
 	public void auditOrderItem(String barcode, double act_qty, long sinId, String pCode,
-			long out_stock, String out_bin_code, long in_stock,String in_bin_code);
+			long out_stock, String out_bin_code, long in_stock,String in_bin_code,String feature);
 }

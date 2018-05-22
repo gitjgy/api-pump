@@ -24,9 +24,9 @@ public class GlobalExceptionHandler {
 	
 	@ExceptionHandler(JpaSystemException.class)
 	@ResponseBody
-	public ResultEntity<String> expiredJwtExceptionHandler(Exception exception) throws Exception{
-		return new ResultEntity<String>(ResultStatus.UNKNOWN_EXCEPTION.getCode(),
-				ResultStatus.UNKNOWN_EXCEPTION.getMessage(), 
+	public ResultEntity<String> expiredJwtExceptionHandler(JpaSystemException exception) throws Exception{
+		return new ResultEntity<String>(ResultStatus.JPA_SYSTEM_EXCEPTION.getCode(),
+				ResultStatus.JPA_SYSTEM_EXCEPTION.getMessage(), 
 				exception.getMessage());
 	}
 	
@@ -39,11 +39,11 @@ public class GlobalExceptionHandler {
 	}
 	
 
-	@ExceptionHandler(Exception.class)
-	@ResponseBody
-	public ResultEntity<String> expiredUnknownExceptionHandler(Exception exception) throws Exception{
-		return new ResultEntity<String>(ResultStatus.UNKNOWN_EXCEPTION.getCode(),
-				ResultStatus.UNKNOWN_EXCEPTION.getMessage(), 
-				exception.getMessage());
-	}
+//	@ExceptionHandler(Exception.class)
+//	@ResponseBody
+//	public ResultEntity<String> expiredUnknownExceptionHandler(Exception exception) throws Exception{
+//		return new ResultEntity<String>(ResultStatus.UNKNOWN_EXCEPTION.getCode(),
+//				ResultStatus.UNKNOWN_EXCEPTION.getMessage(), 
+//				exception.getMessage());
+//	}
 }

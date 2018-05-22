@@ -1,5 +1,6 @@
 package com.johe.api.pump.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -18,6 +19,7 @@ public class InventoryBookEntity {
 	@GeneratedValue
 	@Setter @Getter @ApiModelProperty(value="台账ID") private long ib_id;
 	@Setter @Getter @ApiModelProperty(value="物料ID") private long mt_id;
+	@Setter @Getter @ApiModelProperty(value="物料条码（前14位）") @Column(name="mt_barcode") private String barcode;
 	@Setter @Getter @ApiModelProperty(value="台账类型") private String ib_type;
 	@Setter @Getter @ApiModelProperty(value="入库单ID 或 出库单ID 或 调拨单ID") private long order_id;
 	@Setter @Getter @ApiModelProperty(value="栏目ID") private long item_id;
