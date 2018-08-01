@@ -197,6 +197,7 @@ public class TransferServiceImpl implements TransferService {
 		o.setTran_receipt_date(dto.getTran_receipt_date());
 		o.setTran_transfer_person(dto.getTran_transfer_person());
 		o.setTran_use_person(dto.getTran_use_person());
+		o.setMt_feature(dto.getMt_feature());
 		
 		return orderReps.save(o);
 	}
@@ -205,6 +206,8 @@ public class TransferServiceImpl implements TransferService {
 	private boolean checkItemDto(TransferItemDto dto) {
 		if(dto == null || 
 				StringUtils.isBlank(dto.getMt_feature()) || 
+				StringUtils.isBlank(dto.getTranitem_barcode()) || 
+				dto.getTranitem_barcode().length() != 18 || 
 //				StringUtils.isBlank(dto.getTranitem_in_stock()) || 
 //				StringUtils.isBlank(dto.getTranitem_in_bin_area()) || 
 //				StringUtils.isBlank(dto.getTranitem_in_bin_rack()) || 
@@ -297,7 +300,7 @@ public class TransferServiceImpl implements TransferService {
 					it.getTranitem_in_stock(),it.getTranitem_in_bin_code(),it.getMt_feature());
 			if(dto.getAudit_status().equals("06")) {//库管审核通过时，才更新物料库存
 				// 减少调出仓库的库存（调出仓库减库存）
-				MaterialEntity mt = mReps.findByBarcode(it.getBarcode());
+				MaterialEntity mt = mReps.getByBarcodeStgId(it.getBarcode(),it.getTranitem_out_stock());
 				double qty = 0;
 				double qtyTotal = 0;
 				if(it.getAct_qty_tran()>mt.getMt_in_remain_quantity()) {
@@ -310,8 +313,9 @@ public class TransferServiceImpl implements TransferService {
 				}else {
 					qtyTotal = mt.getMt_in_total_quantity() - it.getAct_qty_tran();
 				}
-				mReps.update(qtyTotal, qty, mt.getMaterialid());// 调出库减库存         
 				
+				mReps.subQtyByBarcode14(qty, it.getBarcode(), it.getTranitem_in_stock());//调出仓库，减库存 
+				mReps.updateQtyByBarcode18(qtyTotal, qty, it.getBarcode(),it.getTranitem_out_stock());// 调出库减库存
 				// 添加库存台账（调出）
 				InventoryBookEntity ibeO = new InventoryBookEntity();
 				ibeO.setMt_id(mt.getMaterialid());
@@ -325,38 +329,58 @@ public class TransferServiceImpl implements TransferService {
 				ibeO.setIn_out_qty(it.getAct_qty_tran());// 本次的调出库数量
 				ibeO.setCur_qty(qty);//当期结存 =（期初结存 - 调出库数量）
 				ibReps.save(ibeO);
-				// TODO: 调拨的调入逻辑待完善
+				
+				
+				//==========================================调拨的调入逻辑待完善
 				// 调入的物料条形码，仓库、仓位有变化
-				String newBarCode = it.getBarcode().substring(0, 6)+it.getTranitem_in_stock()+it.getTranitem_in_bin_code()+it.getBarcode().substring(6, 9);
-				MaterialEntity mtNewTemp= mReps.findByBarcode(newBarCode);
-				long mtId = 0L;
-				if (mtNewTemp== null) {// 添加新物料
+				//String newBarCode = it.getBarcode().substring(0, 6)+it.getTranitem_in_stock()+it.getTranitem_in_bin_code()+it.getBarcode().substring(6, 9);
+				String newBarCode = mReps.makeBarcode(it.getBarcode(), it.getTranitem_in_stock());
+				if(newBarCode == null || StringUtils.isEmpty(newBarCode)) {
+					newBarCode = it.getBarcode();
+				}
+				//MaterialEntity mtNewTemp= mReps.findByBarcode(newBarCode);
+				long mtIdIn = 0L;
+				//if (mtNewTemp== null) {// 添加新物料
 					mReps.insert(mt.getSup_id(), it.getTranitem_in_stock(), mt.getStockbin_area().getSbin_id(), mt.getStockbin_rack().getSbin_id(),
 							mt.getStockbin_pos().getSbin_id(), it.getProduct_code(), mt.getMt_name(), mt.getMt_fullname(), newBarCode,
 							mt.getCategory_big().getId(), mt.getCategory_small().getId(), mt.getMt_feature(), mt.getMt_measure_unit(),
 							it.getAct_qty_tran(), it.getAct_qty_tran(), "01", "01", mt.getMt_min_quantity(), 
 							mt.getMt_max_quantity(),String.valueOf(it.getTranitem_price()));
 																	   //01在用、01正常
-					MaterialEntity mtNew= mReps.findByBarcode(newBarCode);//新增后，回查物料ID
-					mtId = mtNew.getMaterialid();
-					                                                   
-				} else {// 更新库存
-					mtId = mtNewTemp.getMaterialid();
-					mReps.update(it.getAct_qty_tran(), it.getAct_qty_tran(), mtId);
-				}				
+					MaterialEntity mtNew= mReps.getByBarcodeStgId(newBarCode,it.getTranitem_in_stock());//新增后，回查物料ID
+					mtIdIn = mtNew.getMaterialid();
+					// 添加库存台账（调入）
+					InventoryBookEntity ibeI = new InventoryBookEntity();
+					ibeI.setMt_id(mtIdIn);
+					ibeI.setCre_date(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+					ibeI.setIb_type("05");//台账类型：01采购入库、02归还入库、03其它入库、04加工入库、05调拨入库、06借用出库、07领料出库、08加工出库、09调拨出库
+					ibeI.setOrder_id(dto.getTran_id());
+					ibeI.setItem_id(it.getItem_id());// 栏目ID
+					ibeI.setIn_out_type("01");//收入支出类型：01收入、02支出
+					ibeI.setLast_qty(mt.getMt_in_remain_quantity());// 期初结存 就是 库存更新前的 实际库存
+					ibeI.setIn_out_qty(it.getAct_qty_tran());// 本次的调出库数量
+					ibeI.setCur_qty(qty);//当期结存 =（期初结存 - 调出库数量）
+					ibReps.save(ibeI);                                                   
+				//} else {// 更新库存
+//					mtId = mtNewTemp.getMaterialid();
+//					mReps.update(it.getAct_qty_tran(), it.getAct_qty_tran(), mtId);
+//
+					mReps.subQtyByBarcode14(qty, it.getBarcode(), it.getTranitem_in_stock());//调入仓库，加库存 
+				//}				
 				
 				// 暂时仅更新了调出仓库库存，调入仓库库存暂时没有更新（由于没有新的条形码）
-				// 添加库存台账（调入）
-				InventoryBookEntity ibeI = new InventoryBookEntity();
-				ibeI.setMt_id(mtId);
-				ibeI.setCre_date(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-				ibeI.setIb_type("05");//台账类型：01采购入库、02归还入库、03其它入库、04加工入库、05调拨入库、06借用出库、07领料出库、08加工出库、09调拨出库
-				ibeI.setOrder_id(dto.getTran_id());
-				ibeI.setItem_id(it.getItem_id());// 栏目ID
-				ibeI.setIn_out_type("01");//收入支出类型：01收入、02支出
-				ibeI.setLast_qty(mt.getMt_in_remain_quantity());// 期初结存 就是 库存更新前的 实际库存
-				ibeI.setIn_out_qty(it.getAct_qty_tran());// 本次的调出库数量
-				ibeI.setCur_qty(qty);//当期结存 =（期初结存 - 调出库数量）
+				// 添加库存台账（调出）
+				MaterialEntity mtOld= mReps.getByBarcodeStgId(it.getBarcode(),it.getTranitem_out_stock());//调出后，回查物料ID
+				InventoryBookEntity ibeOut = new InventoryBookEntity();
+				ibeOut.setMt_id(mtOld.getMaterialid());
+				ibeOut.setCre_date(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+				ibeOut.setIb_type("09");//台账类型：01采购入库、02归还入库、03其它入库、04加工入库、05调拨入库、06借用出库、07领料出库、08加工出库、09调拨出库
+				ibeOut.setOrder_id(dto.getTran_id());
+				ibeOut.setItem_id(it.getItem_id());// 栏目ID
+				ibeOut.setIn_out_type("02");//收入支出类型：01收入、02支出
+				ibeOut.setLast_qty(mt.getMt_in_remain_quantity());// 期初结存 就是 库存更新前的 实际库存
+				ibeOut.setIn_out_qty(it.getAct_qty_tran());// 本次的调出库数量
+				ibeOut.setCur_qty(qty);//当期结存 =（期初结存 - 调出库数量）
 				ibReps.save(ibeI);
 			}
 		}

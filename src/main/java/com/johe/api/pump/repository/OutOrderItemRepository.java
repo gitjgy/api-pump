@@ -39,7 +39,13 @@ public interface OutOrderItemRepository
 	// 出库单栏目审核（更新 实出数量、条形码）
 	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE pump_out_stock_pick_order_item p SET p.ospitem_barcode=?1,p.ospitem_quantity=?2 WHERE p.osp_id=?3 AND p.ospitem_product_code=?4 AND p.ospitem_delivery_stock=?5 AND p.ospitem_out_bin_code=?6", nativeQuery = true)
+	@Query(value = "UPDATE pump_out_stock_pick_order_item p SET p.ospitem_quantity=?2 WHERE p.osp_id=?3 AND p.ospitem_product_code=?4 AND p.ospitem_delivery_stock=?5 AND p.ospitem_out_bin_code=?6 AND p.ospitem_barcode=?1", nativeQuery = true)
 	public void auditOrderItem(String barcode, double act_qty, long sinId, String pCode, long deliveryStId,
 			String binCode);
+	
+	// 借出记录
+	@Query(value = "SELECT COUNT(*) FROM pump_out_stock_pick_order p "
+			+ "LEFT JOIN pump_out_stock_pick_order_item it ON it.osp_id=p.osp_id "
+			+ "WHERE p.osp_status='08' AND p.osp_type='01' AND it.ospitem_barcode=?1 ", nativeQuery = true)
+	public long getCountByBarCodeType(String barCode);
 }

@@ -184,20 +184,20 @@ public class CheckRecordServiceImpl implements CheckRecordService {
 		MaterialCheckDto mc = new MaterialCheckDto();
 		// 根据物料编码查询物料信息
 		MaterialEntity mt = mReps.findByBarcode(barcode);
-		if(mt == null) return null;
-		long mt_id = mt.getMaterialid();
-		String strBarcode = barcode.length()==14?barcode:barcode.substring(0, 14);
-		InventoryBookEntity ibe = ibReps.getEntityByBarcode(strBarcode);
-		long initQty=0,inTotalQty=0,outTotalQty=0,inventoryQty=0;
-		if(ibe != null) {
-			Object objInitQty = ibReps.getInitQty(strBarcode);
-			initQty = (objInitQty==null?0:convertToInt(objInitQty));
-			Object objInTotalQty = ibReps.getInTotalQty(strBarcode);
-			inTotalQty = (objInTotalQty==null?0:convertToInt(objInTotalQty));
-			Object objOutTotalQty = ibReps.getOutTotalQty(strBarcode);
-			outTotalQty = (objOutTotalQty==null?0:convertToInt(objOutTotalQty));
-			Object objInventoryQty = ibReps.getInventoryQty(strBarcode);
-			inventoryQty =  (objInventoryQty==null?0:convertToInt(objInventoryQty));
+//		if(mt == null) return null;
+//		long mt_id = mt.getMaterialid();
+//		String strBarcode = barcode.length()==14?barcode:barcode.substring(0, 14);
+//		InventoryBookEntity ibe = ibReps.getEntityByBarcode(strBarcode);
+//		long initQty=0,inTotalQty=0,outTotalQty=0,inventoryQty=0;
+//		if(ibe != null) {
+//			Object objInitQty = ibReps.getInitQty(strBarcode);
+//			initQty = (objInitQty==null?0:convertToInt(objInitQty));
+//			Object objInTotalQty = ibReps.getInTotalQty(strBarcode);
+//			inTotalQty = (objInTotalQty==null?0:convertToInt(objInTotalQty));
+//			Object objOutTotalQty = ibReps.getOutTotalQty(strBarcode);
+//			outTotalQty = (objOutTotalQty==null?0:convertToInt(objOutTotalQty));
+			//Object objInventoryQty = ibReps.getInventoryQty(strBarcode);
+			//inventoryQty =  mt.getMt_in_total_quantity();//(objInventoryQty==null?0:convertToInt(objInventoryQty));
 			/*// 期初(期初结存)：物料ID、最早时间
 			initQty = ibReps.getInitQty(barcode);
 			// 入库(sum(出入库数量))：物料ID、收支类型=01（sum)
@@ -206,24 +206,30 @@ public class CheckRecordServiceImpl implements CheckRecordService {
 			outTotalQty = ibReps.getOutTotalQty(barcode);
 			// 库存(当期结存)：物料ID、最近时间
 			inventoryQty = ibReps.getInventoryQty(barcode);*/
-		}
-		mc.setInit_qty(initQty);
-		mc.setIn_stock_qty(inTotalQty);
-		mc.setOut_stock_qty(outTotalQty);
-		mc.setStock_qty(inventoryQty);
-		// 仓库名称
-		mc.setStorage_name(mt.getStorage().getStg_name());
-		// 仓库code
-		mc.setStorage_code(mt.getStorage().getStg_code());
-		// 仓位CODE
-		mc.setSbin_code(mt.getStockbin_area().getSbin_code()+mt.getStockbin_rack().getSbin_code()+mt.getStockbin_pos().getSbin_code());
-		// 计量单位
-		mc.setMea_unit(mt.getMt_measure_unit());
-		// 品名
-		mc.setMt_fullname(mt.getMt_fullname());
+//		}
+		//mc.setInit_qty(initQty);
+		//mc.setIn_stock_qty(inTotalQty);
+		//mc.setOut_stock_qty(outTotalQty);
 		
-		mc.setBig_id(mt.getMt_category_big());
-		mc.setSmall_id(mt.getMt_category_small());
+		long qty = mReps.getRemainQty(barcode);
+		
+		mc.setStock_qty(qty);
+		if(mt != null) {
+			// 仓库名称
+			mc.setStorage_name(mt.getStorage().getStg_name());
+			// 仓库code
+			mc.setStorage_code(mt.getStorage().getStg_code());
+			// 仓位CODE
+			mc.setSbin_code(mt.getStockbin_area().getSbin_code()+mt.getStockbin_rack().getSbin_code()+mt.getStockbin_pos().getSbin_code());
+			// 计量单位
+			mc.setMea_unit(mt.getMt_measure_unit());
+			// 品名
+			mc.setMt_fullname(mt.getMt_fullname());
+			
+			mc.setBig_id(mt.getMt_category_big());
+			mc.setSmall_id(mt.getMt_category_small());
+		}
+
 		
 //		mc.setBig_name(mt.getCategory_big().getName());
 //		mc.setSmall_code(mt.getCategory_small().getCode());
@@ -260,30 +266,54 @@ public class CheckRecordServiceImpl implements CheckRecordService {
 
 	@Override
 	public MaterialCheckDto searchByMtBarcode(String mt_barcode) throws Exception {
-		String barcode = mt_barcode.length()==14?mt_barcode:mt_barcode.substring(0, 14);
+		//String barcode = mt_barcode.length()==14?mt_barcode:mt_barcode.substring(0, 14);
 		MaterialCheckDto mc = new MaterialCheckDto();
-		InventoryBookEntity ibe = ibReps.getEntityByBarcode(barcode);
-		int initQty =0,inTotalQty =0,outTotalQty =0,inventoryQty =0;
-		if(ibe != null) {
-			Object objInitQty = ibReps.getInitQty(barcode);
-			initQty = (objInitQty==null?0:convertToInt(objInitQty));
-			Object objInTotalQty = ibReps.getInTotalQty(barcode);
-			inTotalQty = (objInTotalQty==null?0:convertToInt(objInTotalQty));
-			Object objOutTotalQty = ibReps.getOutTotalQty(barcode);
-			outTotalQty = (objOutTotalQty==null?0:convertToInt(objOutTotalQty));
-			Object objInventoryQty = ibReps.getInventoryQty(barcode);
-			inventoryQty =  (objInventoryQty==null?0:convertToInt(objInventoryQty));
-		}
+//		InventoryBookEntity ibe = ibReps.getEntityByBarcode(barcode);
+//		long initQty =0,inTotalQty =0,outTotalQty =0,inventoryQty =0;
+//		if(ibe != null) {
+//			Object objInitQty = ibReps.getInitQty(barcode);
+//			initQty = (objInitQty==null?0:convertToInt(objInitQty));
+//			Object objInTotalQty = ibReps.getInTotalQty(barcode);
+//			inTotalQty = (objInTotalQty==null?0:convertToInt(objInTotalQty));
+//			Object objOutTotalQty = ibReps.getOutTotalQty(barcode);
+//			outTotalQty = (objOutTotalQty==null?0:convertToInt(objOutTotalQty));
+//			//Object objInventoryQty = ibReps.getInventoryQty(barcode);
+//			MaterialEntity mt = mReps.findByBarcode(mt_barcode);
+//			inventoryQty =  mt.getMt_in_total_quantity();//mReps.getByBarcodeStgId(barCode, stg_id)//(objInventoryQty==null?0:convertToInt(objInventoryQty));
+//		}
 		// 期初(期初结存)：物料ID、最早时间
-		mc.setInit_qty(initQty);
+//		mc.setInit_qty(initQty);
 		// 入库(sum(出入库数量))：物料ID、收支类型=01（sum)
 		
-		mc.setIn_stock_qty(inTotalQty);
+//		mc.setIn_stock_qty(inTotalQty);
 		// 出库(sum(出入库数量))：物料ID、收支类型=02（sum)
-		mc.setOut_stock_qty(outTotalQty);
+//		mc.setOut_stock_qty(outTotalQty);
 		// 库存(当期结存)：物料ID、最近时间
-		mc.setStock_qty(inventoryQty);
 		
+		long qty = 0;
+		try {
+			qty = mReps.getRemainQty(mt_barcode);
+		}catch(Exception ex) {
+			ex.printStackTrace();
+		}
+		System.out.println(">>>>>>>>>>扫描盘点：库存="+qty+",条形码="+mt_barcode);
+		mc.setStock_qty(qty);
+		
+		return mc;
+	}
+//手动盘点
+	@Override
+	public MaterialCheckDto manualCheck(long stg_id, long area_id, long rack_id, long pos_id, long big_id,
+			long small_id) {
+		MaterialCheckDto mc = new MaterialCheckDto();
+		long qty = 0;
+		try {
+			qty = mReps.getRemainQty(stg_id,area_id, rack_id, pos_id, big_id,small_id);
+		}catch(Exception ex) {
+			ex.printStackTrace();
+		}
+		System.out.println(">>>>>>>>>>手动盘点：库存="+qty+",仓库="+stg_id+",区="+area_id+",架="+rack_id+",位="+pos_id+",大类="+big_id+",小类="+small_id);
+		mc.setStock_qty(qty);
 		return mc;
 	}
 

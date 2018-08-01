@@ -18,10 +18,10 @@ public interface OutOrderRepository extends JpaRepository<OutOrderEntity, Long>,
 	
 	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value="UPDATE pump_out_stock_pick_order p SET p.osp_status=?1,p.osp_audit_person=?2,p.osp_reason=?3,p.osp_audit_date=?4 WHERE p.osp_id=?5",nativeQuery=true)
+	@Query(value="UPDATE pump_out_stock_pick_order p SET p.osp_status=?1,p.osp_audit_person=concat_ws(' ',p.osp_audit_person,?2),p.osp_reason=?3,p.osp_audit_date=?4 WHERE p.osp_id=?5",nativeQuery=true)
 	public void auditOrder(String status,String audit_person,String reject_reason,String audit_date,long osp_id);
 	
-	// 物料借用人
+	// 物料借出记录
 	@Query(value="SELECT " + 
 			"  o.osp_pick_address," + 
 			"  o.osp_pick_person,  " + 

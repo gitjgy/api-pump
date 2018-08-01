@@ -179,9 +179,10 @@ public class CheckRecordAPI {
 		return new ResultEntity<MaterialCheckDto>(ResultStatus.OK.getCode(), ResultStatus.OK.getMessage(), mc);
 	}*/
 	
-	// 根据物料ID，获取物料的期初、库存、入库、出库数据
+	// 扫描盘点
+	// 根据物料ID，获取物料的库存
 	@GetMapping("/search/mtbarcode/{mt_barcode}")
-	@ApiOperation(value = "获取物料的期初、库存、入库、出库数据", notes = "获取物料的期初库存、入库、出库、数据")
+	@ApiOperation(value = "根据扫描到的条形码，获取物料的库存数据", notes = "根据扫描到的条形码，获取物料的库存数据")
 	public ResultEntity<MaterialCheckDto> searchQtyByMtId(@PathVariable("mt_barcode") String mt_barcode){
 		MaterialCheckDto mc = null;
 		try {
@@ -195,11 +196,11 @@ public class CheckRecordAPI {
 		return new ResultEntity<MaterialCheckDto>(ResultStatus.OK.getCode(), ResultStatus.OK.getMessage(), mc);
 	}
 	
-	
+	//扫描盘点
 	// 根据物料条形码，获取物料的期初、库存、入库、出库数据
 	@GetMapping("/search/barcode/{bar_code}")
 	@ApiOperation(value = "获取物料的期初、库存、入库、出库数据", notes = "获取物料的期初库存、入库、出库、数据")
-	public ResultEntity<MaterialCheckDto> searchQtyByMtBarcode(@PathVariable("bar_code") String bar_code){
+	public ResultEntity<MaterialCheckDto> scanCheck(@PathVariable("bar_code") String bar_code){
 		if (!AppUtil.isOK(bar_code, 18, true)) {
 			return new ResultEntity<MaterialCheckDto>(ResultStatus.ARGUMENT_VALUE_ILLEGAL.getCode(),
 					ResultStatus.ARGUMENT_VALUE_ILLEGAL.getMessage(), null);
@@ -252,4 +253,33 @@ public class CheckRecordAPI {
 		return new ResultEntity<CheckRecordEntity>(ResultStatus.OK.getCode(), ResultStatus.OK.getMessage(), cre);
 	}
 
+	
+	@GetMapping("/manual/material/{stg_id}/{area_id}/{rack_id}/{pos_id}/{big_id}/{small_id}")
+	@ApiOperation(value = "手动盘点时，根据仓库、仓位（区、架、位）、大类、小类，获取库存", notes = "手动盘点时，根据仓库、仓位（区、架、位）、大类、小类，获取库存")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name = "stg_id", value = "仓库ID", required = true, dataType = "long", paramType = "query"),
+		@ApiImplicitParam(name = "area_id", value = "区ID", required = true, dataType = "long", paramType = "query"),
+		@ApiImplicitParam(name = "rack_id", value = "架ID", required = true, dataType = "long", paramType = "query"),
+		@ApiImplicitParam(name = "pos_id", value = "位ID", required = true, dataType = "long", paramType = "query"),
+		@ApiImplicitParam(name = "big_id", value = "大类ID", required = true, dataType = "long", paramType = "query"),
+		@ApiImplicitParam(name = "small_id", value = "小类ID", required = true, dataType = "long", paramType = "query")
+		})
+	public ResultEntity<MaterialCheckDto> getRemailQty(@PathVariable("stg_id") long stg_id,
+			@PathVariable("area_id") long area_id, @PathVariable("rack_id") long rack_id,
+			@PathVariable("pos_id") long pos_id,@PathVariable("big_id") long big_id,
+			@PathVariable("small_id") long small_id) {
+		MaterialCheckDto mc = new MaterialCheckDto();
+		try {
+			mc = crService.manualCheck(stg_id, area_id, rack_id, pos_id, big_id, small_id);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResultEntity<MaterialCheckDto>(ResultStatus.UNKNOWN_EXCEPTION.getCode(),
+					ResultStatus.UNKNOWN_EXCEPTION.getMessage(), null);
+		}
+		
+		return new ResultEntity<MaterialCheckDto>(ResultStatus.OK.getCode(), ResultStatus.OK.getMessage(), mc);
+	}
+	
+	
 }

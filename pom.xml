@@ -5,7 +5,7 @@
 
 	<groupId>com.johe.pump.api</groupId>
 	<artifactId>api-pump</artifactId>
-	<version>1.0.9-Release</version> 
+	<version>1.0.11-Release</version> 
 	<packaging>war</packaging>
 	 <!-- 打war包 -->
 
@@ -108,7 +108,7 @@
 			 <plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>   --> 
+			</plugin> -->    
 			<!-- 打war包 4 -->
  			 <plugin>
 	            <groupId>org.springframework.boot</groupId>
@@ -129,7 +129,7 @@
 		          <skipTests>true</skipTests>  
 		        </configuration>  
 		      </plugin>  
-		   
+		  
 		</plugins>
 	</build>
 

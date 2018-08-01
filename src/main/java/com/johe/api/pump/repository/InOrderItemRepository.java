@@ -24,6 +24,6 @@ public interface InOrderItemRepository
 	// 入库单栏目审核（更新 实入数量、条形码）
 	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE pump_stockin_order_item p SET p.siitem_barcode=?1,p.siitem_actual_quantity_recv=?2 WHERE p.sin_id=?3 AND p.siitem_product_code=?4 AND p.siitem_receipt_stock=?5 AND p.siitem_stockbin_code=?6", nativeQuery = true)
+	@Query(value = "UPDATE pump_stockin_order_item p SET p.siitem_actual_quantity_recv=?2 WHERE p.sin_id=?3 AND p.siitem_product_code=?4 AND p.siitem_receipt_stock=?5 AND p.siitem_stockbin_code=?6 AND p.siitem_barcode=?1", nativeQuery = true)
 	public void auditOrderItem(String barcode, double act_qty, long sinId, String pCode, long recvStId, String binCode);
 }

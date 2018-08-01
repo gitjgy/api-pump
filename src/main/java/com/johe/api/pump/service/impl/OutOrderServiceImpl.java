@@ -129,7 +129,7 @@ public class OutOrderServiceImpl implements OutOrderService {
 		if(autoFlg == true) {
 			//市采自动审核
 			auditDto.setAudit_person_id(dto.getMake_person());
-			auditDto.setAudit_person_name(String.valueOf(dto.getMake_person()));
+			auditDto.setAudit_person_name(String.valueOf(dto.getPick_person()));
 			auditDto.setAudit_status("06");
 			auditDto.setDelivery_st_id(dto.getDelivery_storage());
 			auditDto.setOrder_id(outOrderEntity.getOspid());
@@ -374,7 +374,7 @@ public class OutOrderServiceImpl implements OutOrderService {
 	@Override
 	public void audit(AuditOutOrderDto dto, boolean isAuto) throws Exception {
 		Date now = new Date();
-		String auditRecords = " -> 库管审核(s%)s% ";
+		
 		String auditDateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(now);
 		String strStatus = ((isAuto== true || "06".equals(dto.getAudit_status()))? "08":dto.getAudit_status());
 		// 更新出库单
@@ -383,25 +383,38 @@ public class OutOrderServiceImpl implements OutOrderService {
 		// 更新物料列表
 		for (int i = 0; i < dto.getItem_list().size(); i++) {
 			AuditOutOrderItemDto it = dto.getItem_list().get(i);
-			outItemReps.auditOrderItem(it.getBarcode(), it.getAct_qty_out(), it.getOsp_id(),
+			//
+			MaterialEntity mt = mReps.getByBarcodeStgId(it.getBarcode(),it.getStorage());
+			
+			double aqty = it.getAct_qty_out();//实出
+			double initQty = mt.getMt_in_remain_quantity();
+			//double qty = 0;
+			double qtyTotal = 0;
+//			if(mt != null) {
+//				initQty = mt.getMt_in_total_quantity();
+//			}
+			if(it.getAct_qty_out()>mt.getMt_in_remain_quantity()) {
+				//qty = 0;
+				aqty = 0;
+				qtyTotal = mt.getMt_in_total_quantity() - aqty;
+			}else {
+				//qty = mt.getMt_in_remain_quantity() -it.getAct_qty_out();
+				aqty = it.getAct_qty_out();
+				qtyTotal = mt.getMt_in_remain_quantity() - aqty;
+			}
+//			if(it.getAct_qty_out() > mt.getMt_in_total_quantity()) {
+//				qtyTotal = 0;
+//				aqty = mt.getMt_in_total_quantity();
+//			}else {
+//				qtyTotal = mt.getMt_in_total_quantity() - it.getAct_qty_out();
+//			}
+			outItemReps.auditOrderItem(it.getBarcode(), aqty, it.getOsp_id(),
 					it.getProduct_code(), it.getStorage(), it.getStockbin_code());
 			
-			if(dto.getAudit_status().equals("06")) {//库管审核通过时，才更新物料库存
-				// 更新库存
-				MaterialEntity mt = mReps.findByBarcode(it.getBarcode());
-				double qty = 0;
-				double qtyTotal = 0;
-				if(it.getAct_qty_out()>mt.getMt_in_remain_quantity()) {
-					qty = 0;
-				}else {
-					qty = mt.getMt_in_remain_quantity() -it.getAct_qty_out();
-				}
-				if(it.getAct_qty_out() > mt.getMt_in_total_quantity()) {
-					qtyTotal = 0;
-				}else {
-					qtyTotal = mt.getMt_in_total_quantity() - it.getAct_qty_out();
-				}
-				mReps.update(qtyTotal, qty, mt.getMaterialid());
+			if(dto.getAudit_status().equals("06")) {//库管审核通过时，才更新物料库存				
+				//mReps.subQtyByBarcode14(qty, it.getBarcode(), it.getStorage());
+				mReps.updateQtyByBarcode18(qtyTotal,initQty - aqty, it.getBarcode(), it.getStorage());
+				//mReps.updateTotalQtyByBarcode14(qtyTotal, it.getBarcode(), it.getStorage());
 				// 添加库存台账
 				InventoryBookEntity ibe = new InventoryBookEntity();
 				ibe.setBarcode(mt.getBarcode().substring(0, 14));
@@ -411,9 +424,9 @@ public class OutOrderServiceImpl implements OutOrderService {
 				ibe.setOrder_id(dto.getOrder_id());
 				ibe.setItem_id(mt.getMaterialid());
 				ibe.setIn_out_type("02");//收入支出类型：01收入、02支出
-				ibe.setLast_qty(mt.getMt_in_remain_quantity());// 期初结存 就是 库存更新前的 实际库存
-				ibe.setIn_out_qty(it.getAct_qty_out());// 本次的出库数量
-				ibe.setCur_qty(qty);//当期结存 =（期初结存 - 出库数量）
+				ibe.setLast_qty(initQty);// 期初结存 就是 库存更新前的 实际库存
+				ibe.setIn_out_qty(aqty);// 本次的出库数量
+				ibe.setCur_qty(initQty  - aqty);//当期结存 =（期初结存 - 出库数量）
 				ibReps.save(ibe);
 			}
 		}

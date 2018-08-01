@@ -29,7 +29,7 @@ public interface InOrderRepository extends JpaRepository<InOrderEntity, Long>,
 	
 	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value="UPDATE pump_stockin_order p SET p.sin_status=?1,p.sin_audit_person=?2,p.sin_reject_reason=?3,p.sin_audit_date=?4 WHERE p.sin_id=?5",nativeQuery=true)
+	@Query(value="UPDATE pump_stockin_order p SET p.sin_status=?1,p.sin_audit_person=concat_ws(':',p.sin_audit_person,?2),p.sin_reject_reason=?3,p.sin_audit_date=?4 WHERE p.sin_id=?5",nativeQuery=true)
 	public void auditOrder(String sin_status,String audit_person,String reject_reason,String audit_date,long sinId);
 	
 	// 获取条码对应的入库记录

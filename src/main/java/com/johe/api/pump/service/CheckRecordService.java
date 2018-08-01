@@ -16,13 +16,17 @@ public interface CheckRecordService {
 	// 审核入库单
 //	InOrderEntity audit(String bizType, long orderId, long auditUserId, String status, String auditSuggestion);
 	
-	// 扫描盘点搜索，条形码搜索（期初量、入库量、出库量、库存量、品名、仓库、仓位、类别）
+	// 扫描盘点搜索，条形码搜索（期初量、入库量、出库量、库存量、品名、仓库、仓位、类别）	
 	MaterialCheckDto searchByBarcode(String barcode) throws Exception ;
 	
-	// 手动盘点 选择物料搜索（物料ID）搜索（期初量、入库量、出库量、库存量、品名、仓库、仓位、类别）
+	// 手动盘点（根据仓库、仓位（区架位），获取库存（不含报废的物料）
+	MaterialCheckDto manualCheck(long stg_id,long area_id,long rack_id,long pos_id,long big_id,long small_id);
+	
+	// 手动盘点 选择物料搜索（物料ID）搜索（期初量、入库量、出库量、库存量、品名、仓库、仓位、类别）（不含报废的物料）
 	MaterialCheckDto searchByMtId(long mt_id) throws Exception ;
 	
 	// 手动盘点 选择物料搜索（物料条码（前14位））搜索（期初量、入库量、出库量、库存量、品名、仓库、仓位、类别）
+	//过期了！！！！！！！！！！！！！
 	MaterialCheckDto searchByMtBarcode(String mt_barcode) throws Exception ;
 
 }

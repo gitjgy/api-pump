@@ -90,16 +90,19 @@ public class InOrderServiceImpl implements InOrderService {
 		for (int i = 0; i < itemList.size(); i++) {
 			InOrderItemDto it = itemList.get(i);
 			
-			// 自动生成条码，唯一
+//			// 自动生成条码，唯一
 			String newBarCode =it.getBarcode();
-			if(it.getBarcode().length()<18) {
-				List<MaterialEntity> mlist= mReps.searchByBarcodeLike(it.getBarcode().substring(0, 14));
-				if(mlist != null && mlist.size() > 0) {
-					newBarCode = mReps.makeBarcode(it.getBarcode());
-				}else {
-					newBarCode+="0000";
-				}
-			}
+//			if(it.getBarcode().length()<18) {
+//				List<MaterialEntity> mlist= mReps.searchByBarcodeLike(it.getBarcode().substring(0, 14));
+//				if(mlist != null && mlist.size() > 0) {
+//					newBarCode = mReps.makeBarcode(it.getBarcode());
+//				}else {
+//					newBarCode+="0000";
+//				}
+//			}
+			
+			//自动改为手动录入
+			
 			
 			InOrderItemEntity itret = saveItem(inOrderEntity.getSinid(), dto.getSupply(), it);
 			if("02".equals(itret.getMt_feature())) {//若特性是市采02
@@ -294,9 +297,13 @@ public class InOrderServiceImpl implements InOrderService {
 		o.setSin_dept(dto.getDept());
 		o.setMt_feature(dto.getFeature());// 特性
 		o.setSin_supply(dto.getSupply());
-		String kgStatus = "01";//待审
-		if(dto.getFeature().equals("02")) {
-			kgStatus="08";//市采，直接状态设为“8库管审核通过”
+		String kgStatus = "01";//待审(物料特性：01普通、02市采、03重要、04关键 )
+		if(dto.getFeature().equals("01")) {//普通
+			kgStatus="10";//直接状态设为“10库管待审”
+		}else if(dto.getFeature().equals("02")) {
+			kgStatus="08";//市采，直接状态设为“08库管审核通过”，自动审核
+		}else if(dto.getFeature().equals("03") || dto.getFeature().equals("04")) {
+			kgStatus="01";//重要、关键，直接状态设为“01主管待审”
 		}
 		o.setSin_status(kgStatus);// 状态
 		o.setSin_acceptor(dto.getAcceptor());
@@ -310,7 +317,7 @@ public class InOrderServiceImpl implements InOrderService {
 	}
 
 	private boolean checkItemDto(InOrderItemDto dto) {
-		if (dto != null && StringUtils.isNotBlank(dto.getBarcode()) && StringUtils.isNotBlank(dto.getFeature())
+		if (dto != null && StringUtils.isNotBlank(dto.getBarcode()) && dto.getBarcode().length() == 18 && StringUtils.isNotBlank(dto.getFeature())
 				&& StringUtils.isNotBlank(dto.getProduct_code())) {
 			if (StringUtils.isNotBlank(dto.getValid_until()) && AppUtil.isValidDateForyyyyMMdd(dto.getValid_until())
 					&& StringUtils.isNotBlank(dto.getBuy_date()) && AppUtil.isValidDateForyyyyMMdd(dto.getBuy_date())
@@ -349,11 +356,22 @@ public class InOrderServiceImpl implements InOrderService {
 		ioe.setSin_supply(dto.getSupply_id());
 		ioe.setSin_tally_person(dto.getTally_person());
 		ioe.setSin_type(dto.getIn_type());
-		if("02".equals(dto.getFeature())) {
-			ioe.setSin_status("06");//普通/市采的物料，直接进入库管审核10
-		}else {
-			ioe.setSin_status("01");//重要/关键的物料，正常走二级或三级审核流程
+//		if("02".equals(dto.getFeature())) {
+//			ioe.setSin_status("06");//普通/市采的物料，直接进入库管审核10
+//		}else {
+//			ioe.setSin_status("01");//重要/关键的物料，正常走二级或三级审核流程
+//		}
+//		
+		String kgStatus = "01";//待审(物料特性：01普通、02市采、03重要、04关键 )
+		if(dto.getFeature().equals("01")) {//普通
+			kgStatus="10";//直接状态设为“10库管待审”
+		}else if(dto.getFeature().equals("02")) {
+			kgStatus="08";//市采，直接状态设为“08库管审核通过”，自动审核
+		}else if(dto.getFeature().equals("03") || dto.getFeature().equals("04")) {
+			kgStatus="01";//重要、关键，直接状态设为“01主管待审”,//重要/关键的物料，正常走二级或三级审核流程
 		}
+		ioe.setSin_status(kgStatus);
+		
 		InOrderEntity en = inOrderReps.save(ioe);
 
 		// 物料栏目
@@ -457,26 +475,35 @@ public class InOrderServiceImpl implements InOrderService {
 			
 			// 库管审核通过时，才更新物料库存
 			if (dto.getAudit_status().equals("06")) {
-					MaterialEntity mt = mReps.findByBarcode(it.getBarcode());
-					if (mt == null) {// 添加新物料
-//						mReps.insert(it.getSupply_id(), it.getRecv_st_id(), it.getArea_id(), it.getRack_id(),
-//								it.getPos_id(), it.getProduct_code(), it.getMt_name(), it.getMt_fullname(), it.getBarcode(),
-//								it.getBig_id(), it.getSmall_id(), it.getMt_feature(), it.getMea_unit(),
-//								it.getAct_qty_recv(), it.getAct_qty_recv(), "01", "01", it.getMin_qty(), it.getMax_qty());
-						CategoryEntity big = categoryReps.findOne(it.getCategory());
-						CategoryEntity small = categoryReps.findOne(it.getProduct_name());
+					CategoryEntity big = categoryReps.findOne(it.getCategory());
+					CategoryEntity small = categoryReps.findOne(it.getProduct_name());
+					String inType = dto.getIn_type();//02采购入库、03归还入库、04其他入库、05加工入库
+					
+					MaterialEntity mtExist = mReps.getByBarcode(it.getBarcode(), it.getReceipt_stock());
+					double totalQty = it.getAct_qty_recv();
+					double initQty = 0;
+					if(mtExist != null) {
+						totalQty=mtExist.getMt_in_total_quantity()+it.getAct_qty_recv();
+						initQty = mtExist.getMt_in_total_quantity();
+					}
+					//采购、加工、其他入库，一物一条码，新增一条物料信息；  
+					if("02".equals(inType) || "04".equals(inType) || "05".equals(inType)) {
+						//更新此类物料的所有库存
+						if(mtExist != null) {//若存在
+							mReps.addQtyByBarcode14(it.getAct_qty_recv(), it.getBarcode(), it.getReceipt_stock());
+						}
 						mReps.insert(it.getSupply(), it.getReceipt_stock(), it.getStock_bin_area(), it.getStock_bin_rack(),
 								it.getStock_bin_pos(), it.getProduct_code(), small.getName(), big.getName()+"-"+small.getName(), it.getBarcode(),
 								it.getCategory(), it.getProduct_name(), it.getMt_feature(),it.getMeasure_unit(),
-								it.getAct_qty_recv(), it.getAct_qty_recv(), "01", "01", small.getMt_min_quantity(),
-								small.getMt_max_quantity(),String.valueOf(it.getPrice()));
-						                                                   //默认 01在用、01正常
-						mt = mReps.findByBarcode(it.getBarcode());
-					} else {// 更新库存
-						double qtyTotal = mt.getMt_in_total_quantity()+it.getAct_qty_recv();
-						double qty = mt.getMt_in_remain_quantity()+it.getAct_qty_recv();
-						mReps.update(qtyTotal, qty, mt.getMaterialid());
+								totalQty, it.getAct_qty_recv(), "01", "01", small.getMt_min_quantity(),
+								small.getMt_max_quantity(),String.valueOf(it.getPrice()));//默认状态 01在用、01正常	
+
+					}else if("03".equals(inType)) {//归还
+						//归还，直接更新条码对应的物料总库存、仓位库存
+						mReps.addQtyByBarcode18(it.getAct_qty_recv(), it.getBarcode(), it.getReceipt_stock());
 					}
+					
+					MaterialEntity mt = mReps.findByBarcode(it.getBarcode());
 					// 添加库存台账（一种物料，对应一条台账记录）
 					InventoryBookEntity ibe = new InventoryBookEntity();
 					ibe.setMt_id(mt.getMaterialid());	
@@ -487,9 +514,9 @@ public class InOrderServiceImpl implements InOrderService {
 					ibe.setOrder_id(dto.getOrder_id());
 					ibe.setItem_id(mt.getMaterialid());
 					ibe.setIn_out_type("01");//收入支出类型：01收入、02支出
-					ibe.setLast_qty(mt.getMt_in_remain_quantity());// 期初结存 就是 库存更新前的 实际库存
+					ibe.setLast_qty(initQty);// 期初结存 就是 库存更新前的 实际库存
 					ibe.setIn_out_qty(it.getAct_qty_recv());// 本次的出入库数量
-					ibe.setCur_qty(mt.getMt_in_remain_quantity()+it.getAct_qty_recv());//当期结存 =（期初结存+入库数量）
+					ibe.setCur_qty(initQty+it.getAct_qty_recv());//当期结存 =（期初结存+入库数量）
 					ibReps.save(ibe);
 			}
 		}
@@ -535,7 +562,7 @@ public class InOrderServiceImpl implements InOrderService {
 		}else if("03".equals(dto.getIn_type())){//归还入库，去查询有没有借出记录
 			//查询借出记录
 			List<Object> objList = outOrderReps.getPickInfo(dto.getBar_code());
-			if(objList == null) {//没有借出记录，则此条码不可用
+			if(objList == null || objList.size() == 0) {//没有借出记录，则此条码不可用
 				result.setFlg_usabled(false);
 				result.setUnusable_cause("此条码"+dto.getBar_code()+"没有借出记录，将不能归还！");
 			}else {
